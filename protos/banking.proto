@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./packets";
+// services
+
+service Banking {
+    rpc BankInquiry(PViewRequest) returns (PViewResponse){}
+    rpc NapasBankCodeInquiry(PViewRequest) returns (PViewResponse){}
+	rpc VADetailInquiry(VADetailRequest) returns (VADetailResponse){}
+	rpc VABalanceUpdate(VABalanceUpdateRequest) returns (VADetailResponse){}
+	rpc PayRecvAccountNotify(PayRecvAccountNotifyRequest) returns (PayRecvAccountNotifyResponse){}
+	rpc CifDetailInquiry(CifDetailRequest) returns (CifDetailResponse){}
+	rpc SmeDetailInquiry(SmeDetailRequest) returns (SmeDetailResponse){}
+	rpc SmeCreate(SmeCreateRequest) returns (SmeDetailResponse){}
+
+	rpc VASingleUseRegister(VASingleUseRegisterRequest) returns (VASingleUseResponse){}
+	rpc VASingleUseUpdate(VASingleUseUpdateRequest) returns (VASingleUseResponse){}
+	rpc VASingleUseInquiry(VASingleUseInquiryRequest) returns (VASingleUseResponse){}
+}
+
+message VADetailRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string AccountNumber = 3;
+	string AccountType = 4;
+	string BankAccountNumber = 5;
+	string BankCode = 6;
+	double TransferringAmount = 7;
+}
+
+message VABalanceUpdateRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string AccountNumber = 3;
+	string TransactionNumber = 4;
+	repeated string AdjustedFields = 5;
+	double AdjustedBalanceCurrentAmount = 6;
+	double AdjustedBalanceAvailableAmount = 7;
+	double AdjustedBalanceHoldingAmount = 8;
+	bool IsResetCashInPerDayAmount = 9;
+	double AdjustedCashInPerDayAmount = 10;
+	google.protobuf.Timestamp CashInLastDate = 11;
+	bool IsResetCashOutPerDayAmount = 12;
+	double AdjustedCashOutPerDayAmount = 13;
+	google.protobuf.Timestamp CashOutLastDate = 14;
+	bool IsResetCashOutPerWeekAmount = 15;
+	double AdjustedCashOutPerWeekAmount = 16;
+	google.protobuf.Timestamp CashOutLastWeekDate = 17;
+	double AdjustedBalancePendingAmount = 18;
+	double AdjustedBalanceCollectingAmount = 19;
+    google.protobuf.Timestamp TransactionAt = 20;
+}
+
+message VADetailResponse {
+    PStatus Status = 1;
+	string TenantCode = 2;
+	string AccountNumber = 3;
+	string AccountName = 4;
+	string CurrencyCode = 5;
+	string AccountType = 6;
+	string ParentAccountNumber = 7;
+	string BankAccountNumber = 8;
+	string BankCode = 9;
+	string BlacklistCode = 10;
+	string CifNumber = 11;
+	string SmeNumber = 12;
+	string MasterAccountNumber = 13;
+	double BalanceCurrentAmount = 14;
+	double BalanceAvailableAmount = 15;
+	double BalanceHoldingAmount = 16;
+	double CashInPerDayAmount = 17;
+	google.protobuf.Timestamp CashInLastDate = 18;
+	double CashOutPerDayAmount = 19;
+	google.protobuf.Timestamp CashOutLastDate = 20;
+	double CashOutPerWeekAmount = 21;
+	google.protobuf.Timestamp CashOutLastWeekDate = 22;
+	double BalancePendingAmount = 23;
+    string PayRecvAccountNumber = 24;
+	string UserId = 25;
+	string BusinessId = 26;
+	double BalanceCollectingAmount = 27;
+}
+
+message PayRecvAccountNotifyRequest {
+	string BankTransactionNumber = 1;
+	string PayRecvAccountNumber = 2;
+    string BankCode = 3;
+    string CurrencyCode = 4;
+	double CurrentBalance = 5;
+	google.protobuf.Timestamp TransactionAt = 6;
+}
+
+message PayRecvAccountNotifyResponse {
+    PStatus Status = 1;
+    string TransactionNumber = 2;
+}
+
+message CifDetailRequest {
+	string TenantCode = 1;
+	string CifNumber = 2;
+	string CifAccountName = 3;
+}
+
+message CifDetailResponse {
+    PStatus Status = 1;
+	string TenantCode = 2;
+	string CifNumber = 3;
+	string CifIdCardNumber = 4;
+	string CifPassportNumber = 5;
+	google.protobuf.Timestamp CifBodDate = 6;
+	string CifLastName = 7;
+	string CifFirstName = 8;
+	string CifAccountName = 9;
+	string CifCurrentCityAddress = 10;
+	string CifCurrentDistrictAddress = 11;
+	string CifCurrentDetailAddress = 12;
+	string CifPhoneNumber = 13;
+	string CifEmail = 14;
+	string CifGender = 15;
+	string CifNationality = 16;
+	string CifPermanentCityAddress = 17;
+	string CifPermanentDistrictAddress = 18;
+	string CifPermanentDetailAddress = 19;
+	string CifOriginalCityAddress = 20;
+	string CifOriginalDistrictAddress = 21;
+	string CifOriginalDetailAddress = 22;
+	string CifIdentification = 23;
+	string CifIdCardIssuingAddress = 24;
+	google.protobuf.Timestamp CifIdCardIssuingDate = 25;
+	google.protobuf.Timestamp CifIdCardExpiryDate = 26;
+	string CifPassportIssuingAddress = 27;
+	google.protobuf.Timestamp CifPassportIssuingDate = 28;
+	google.protobuf.Timestamp CifPassportExpiryDate = 29;
+	string CifType = 30;
+	int64 CifKycNumber = 31;
+	string CifLevel = 32;
+	string CifBlacklistCode = 33;
+}
+
+message SmeCreateRequest {
+	string ClientId = 1;
+	string TenantCode = 2;
+	string SmeOriginalName = 3;
+	string SmeInternationalName = 4;
+	string SmeTaxCode = 5;
+	string SmeTaxProvider = 6;
+	string SmeEstablishedDate = 7;
+	string SmeEmail = 8;
+	string SmePhoneNumber = 9;
+	string SmeCurrentCityAddress = 10;
+	string SmeCurrentDistrictAddress = 11;
+	string SmeCurrentDetailAddress = 12;
+	string SmeAdditionalInformation = 13;
+	string CifNumber = 14;
+}
+
+message SmeDetailRequest {
+	string TenantCode = 1;
+	string SmeNumber = 2;
+}
+
+message SmeDetailResponse {
+    PStatus Status = 1;
+	string TenantCode = 2;
+	string SmeNumber = 3;
+	string SmeOriginalName = 4;
+	string SmeInternationalName = 5;
+	string SmeTaxCode = 6;
+	string SmeTaxProvider = 7;
+	string SmeEstablishedDate = 8;
+	string SmeEmail = 9;
+	string SmePhoneNumber = 10;
+	string SmeCurrentCityAddress = 11;
+	string SmeCurrentDistrictAddress = 12;
+	string SmeCurrentDetailAddress = 13;
+	string SmeAdditionalInformation = 14;
+	int64 SmeKycNumber = 15;
+	string SmeBlacklistCode = 16;
+	string CifNumber = 17;
+}
+
+message VASingleUseRegisterRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string UserId = 3;
+	int64 PaymentLinkId = 4;
+	string CurrencyCode = 5;
+	string ExpiryDate = 6;
+	double ExpectingAmount = 7;
+	string LinkingAccountNumber = 8;
+	string PaymentLinkNumber = 9;
+	string BusinessId = 10;
+}
+
+message VASingleUseUpdateRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string AccountNumber = 3;
+	string TransactionNumber = 4;
+	repeated string AdjustedFields = 5;
+	int64 PaymentLinkId = 6;
+	double AdjustedCurrentAmount = 7;
+	bool IsActive = 8;
+	string PaymentLinkNumber = 9;
+    google.protobuf.Timestamp TransactionAt = 10;
+}
+
+message VASingleUseInquiryRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string AccountNumber = 3;
+	string BankAccountNumber = 4;
+	string BankCode = 5;
+	string IsActive = 6;
+}
+
+message VASingleUseResponse {
+    PStatus Status = 1;
+	string TenantCode = 2;
+	string AccountNumber = 3;
+	string AccountName = 4;
+	string LinkingAccountNumber = 5;
+	string CurrencyCode = 6;
+	string AccountType = 7;
+	string CifNumber = 8;
+	string SmeNumber = 9;
+	string BankAccountNumber = 10;
+	string BankCode = 11;
+	int64 PaymentLinkId = 12;
+	string MasterAccountNumber = 13;
+	string ExpiryDate = 14;
+	bool IsActive = 15;
+	double ExpectingAmount = 16;
+	double AccumulatedAmount = 17;
+	double CurrentAmount = 18;
+	string PaymentLinkNumber = 19;
+}

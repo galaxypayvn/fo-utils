@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./packets";
+// services
+
+service Tenant {
+	rpc TenantDetailInquiry(TenantDetailRequest) returns (TenantDetailResponse){}
+	rpc UserVerification(UserVerifyRequest) returns (UserResponse){}
+	rpc UserRegistration(UserRegisterRequest) returns (UserResponse){}
+
+	rpc ApplyScope(ApplyScopeRequest) returns (ApplyScopeResponse) {}
+	rpc Authentication(AuthenticationRequest) returns (AuthenticationResponse) {}
+	rpc RefreshToken(RefreshTokenRequest) returns (AuthenticationResponse) {}
+  rpc CheckClient(CheckClientRequest) returns (CheckClientResponse) {}
+  rpc InsertOtpMas(InsertOtpMasRequest) returns (InsertOtpMasResponse) {}
+  rpc VerifyOtp(VerifyTOtpRequest) returns (VerifyTOtpResponse) {}
+  rpc ClientInquiry(ClientInquiryRequest) returns (ClientInquiryResponse) {}
+	/*rpc BasicAuthentication(BasicAuthenticationRequest) returns (AuthenticationResponse) {}
+	rpc BasicRefreshToken(BasicRefreshTokenRequest) returns (AuthenticationResponse) {}
+	rpc CheckBasicThirdpartyVendor(CheckBasicThirdpartyVendorRequest) returns (CheckBasicThirdpartyVendorResponse) {}*/
+}
+
+message TenantDetailRequest {
+    string TenantCode = 1;
+}
+
+message TenantDetailResponse {
+    PStatus Status = 1;
+    string TenantCode = 2;
+    string TenantName = 3;
+    string TenantDescriptions = 4;
+}
+
+message UserVerifyRequest {
+    string TenantCode = 1;
+    string Username = 2;
+}
+message UserRegisterRequest {
+    string TenantCode = 1;
+    string ClientId = 2;
+    string Username = 3;
+    string Email = 4;
+    string PhoneNumber = 5;
+    string Locale = 6;
+    string BusinessId = 7;
+}
+message UserResponse {
+    PStatus Status = 1;
+    string TenantCode = 2;
+    string Username = 3;
+    string Password = 4;
+    string Email = 5;
+    string PhoneNumber = 6;
+    string Locale = 7;
+    repeated string ClientRoles = 8;
+}
+
+
+message ScopeItem {
+    string Code = 1;
+    string Name = 2;
+    string ServiceKey = 3;
+}
+
+message ApplyScopeRequest {
+    string ClientId = 1;
+    repeated ScopeItem Items = 2;
+}
+
+message ApplyScopeResponse {
+    PStatus Status = 1;
+}
+
+message AuthenticationRequest {
+    string Token = 1;
+    string Type = 2;
+    string Key = 3;
+    repeated string Scopes = 4;
+}
+
+message AuthenticationResponse {
+    PStatus Status = 1;
+    string Token = 2;
+    string RefreshToken = 3;
+}
+
+message RefreshTokenRequest {
+	string PublicToken = 1;
+	string AccessToken = 2;
+	string RefreshToken = 3;
+}
+
+message CheckClientRequest {
+    string Type = 1;
+    string Token = 2;
+    string Jti = 3;
+    string Signature = 4;
+}
+message CheckClientResponse {
+	PStatus Status = 1;
+	string ClientId = 2;
+	string TenantCode = 3;
+	repeated ScopeItem AllowScopes = 4;
+	google.protobuf.Timestamp ExpiredAt = 5;
+	string PrivateToken = 6;
+}
+
+
+/*message BasicAuthenticationRequest {
+    string VendorUUID = 1;
+    string VendorPassToken = 2;
+    string ContextType = 3;
+    string ContextKey = 4;
+}
+
+message BasicRefreshTokenRequest {
+    string AccessToken = 1;
+    string RefreshToken = 2;
+}
+
+message CheckBasicThirdpartyVendorRequest {
+    string RouteType = 1;
+    string UUID = 2;
+    string TokenJTI = 3;
+}
+
+message CheckBasicThirdpartyVendorResponse {
+    PStatus Status = 1;
+    string UUID = 2;
+    int64 ID = 3;
+    string Code = 4;
+    string Name = 5;
+    string PassToken = 6;
+    string TransitionPassToken = 7;
+    string PrivateToken = 8;
+    repeated ScopeItem AllowScopes = 9;
+    google.protobuf.Timestamp TokenExpiredAt = 10;
+}*/
+
+message InsertOtpMasRequest {
+    string TenantCode = 1;
+    string ClientId = 2;
+    string OtpIssuer = 3;
+    int64 OtpDigits = 4;
+    int64 OtpPeriod = 5;
+    int64 CurrentRemainingTry = 6;
+    string OtpPurpose = 7;
+    int64 OtpAlgorithm = 8;
+}
+
+message InsertOtpMasResponse {
+    PStatus Status = 1;
+    string ClientId = 2;
+    string TenantCode = 3;
+    string OtpSecretKey = 4;
+    string PassCode = 5;
+    string TargetEmail = 6;
+    string VerifyStatus = 7;
+    google.protobuf.Timestamp UnlockAt = 8;
+
+}
+
+message VerifyTOtpRequest {
+    string TenantCode = 1;
+    string ClientId = 2;
+    string OtpIssuer = 3;
+    string OtpPurpose = 4;
+    string PassCode = 5;
+}
+
+message VerifyTOtpResponse {
+    PStatus Status = 1;
+    string TenantCode = 2;
+    string ClientId = 3;
+    string OtpIssuer = 4;
+    string VerifyStatus = 5;
+    int64 CurrentRemainingTry = 6;
+    google.protobuf.Timestamp UnlockAt = 7;
+}
+
+message ClientInquiryRequest {
+    string TenantCode = 1;
+    string ClientId = 2;
+    string BusinessId = 3;
+}
+
+message ClientInquiryResponse {
+    PStatus Status = 1;
+    string TenantCode = 2;
+    string ClientId = 3;
+    string ClientName = 4;
+    string BusinessId = 5;
+}

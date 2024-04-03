@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./packets";
+// services
+
+service Payment {
+    // for adapter
+    rpc CreateCashIn(CreateCashInRequest) returns (CreateCashInResponse){}
+    rpc CashInInquiry(CashInInquiryRequest) returns (CashInInquiryResponse){}
+    rpc CashOutCallback(CashOutCallbackRequest) returns (CashOutCallbackResponse){}
+
+    // for recon
+    rpc TransactionAdjustment(TransactionAdjustmentRequest) returns (TransactionAdjustmentResponse){}
+    rpc TransactionEnrollment(TransactionEnrollmentRequest) returns (TransactionEnrollmentResponse){}
+}
+
+message CreateCashInRequest {
+    string BankTransactionNumber = 1;
+    string HomingAccountNumber = 2;
+    string HomingAccountName = 3;
+    string BeneficiaryAccountNumber = 4;
+    string BeneficiaryAccountName = 5;
+    double TransactionAmount = 6;
+    string CurrencyCode = 7;
+    string TransactionNote = 8;
+    string ProviderId = 9;
+    string MerchantId = 10;
+    string BankCode = 11;
+    string BankBranchCode = 12;
+    string PayRecvAccountNumber = 13;
+    string BankReferenceNumber = 14;
+    string BankReferenceInfo = 15;
+    google.protobuf.Timestamp TransactionAt = 16;
+    string TransactionStatus = 17;
+    string BankTransactionId = 18;
+}
+message CreateCashInResponse {
+    PStatus Status = 1;
+    string PaymentNumber = 2;
+    string TransactionNumber = 3;
+}
+
+message CashInInquiryRequest {
+    string PaymentNumber = 1;
+    string TransactionNumber = 2;
+}
+message CashInInquiryResponse {
+    PStatus Status = 1;
+    string PaymentNumber = 2;
+    string TransactionNumber = 3;
+}
+
+message CashOutCallbackRequest {
+    string TransactionNumber = 1;
+    string BankTransactionNumber = 2;
+    string BankCode = 3;
+    string ProviderId = 4;
+    string MerchantId = 5;
+    string ResultCode = 6;
+    string ResultMessage = 7;
+}
+
+message CashOutCallbackResponse {
+    PStatus Status = 1;
+}
+
+message TransactionAdjustmentRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string TransactionNumber = 3;
+	string PaymentStatus = 4;
+	string PaymentFailedReason = 5;
+}
+
+message TransactionAdjustmentResponse {
+    PStatus Status = 1;
+}
+
+message TransactionEnrollmentRequest {
+	string TenantCode = 1;
+	string ClientId = 2;
+	string HomingAccountNumber = 3;
+	string HomingAccountName = 4;
+	string BeneficiaryAccountNumber = 5;
+	string BeneficiaryAccountName = 6;
+	string PayRecvAccountNumber = 7;
+	string PaymentUseCase = 8;
+	string TransactionNumber = 9;
+	string BankTransactionNumber = 10;
+	string BeneficiaryBankCode = 11;
+	string CurrencyCode = 12;
+	double TransactionAmount = 13;
+	google.protobuf.Timestamp TransactionAt = 14;
+	string TransactionNote = 15;
+}
+
+message TransactionEnrollmentResponse {
+    PStatus Status = 1;
+    string PaymentNumber = 2;
+    string TransactionNumber = 3;
+}

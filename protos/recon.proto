@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./packets";
+// services
+
+service Recon {
+	rpc BankReconRegister(BankReconRegisterRequest) returns (BankReconRegisterResponse){}
+	rpc BankReconModify(BankReconModifyRequest) returns (BankReconModifyResponse){}
+
+    rpc ProviderReconRegister(ProviderReconRegisterRequest) returns (ProviderReconRegisterResponse){}
+}
+
+message BankReconRegisterRequest {
+	string TenantCode = 1;
+    string BankCode = 2;
+    string TargetBankCode = 3;
+    string ReconcileType = 4;
+    string TransactionNumber = 5;
+    string PaymentNumber = 6;
+	string HomingAccountNumber = 7;
+	string BeneficiaryAccountNumber = 8;
+	string BeneficiaryAccountName = 9;
+	string BankAccountNumber = 10;
+    string BankTransactionNumber = 11;
+    string BankTransactionId = 12;
+    string BankReferenceNumber = 13;
+    string BankBranchCode = 14;
+    string PayRecvAccountNumber = 15;
+    string MerchantId = 16;
+    double TransactionAmount = 17; 
+    string CurrencyCode = 18;
+    string BankReferenceInfo = 19;
+    google.protobuf.Timestamp TransactionAt = 20;
+    string TransactionMethod = 21;
+    string TransactionStatus = 22; 
+    string TransactionNote = 23;
+}
+
+message BankReconRegisterResponse {
+    PStatus Status = 1;
+}
+
+message BankReconModifyRequest {
+	string TenantCode = 1;
+    string BankCode = 2;
+    string ReconcileType = 3;
+    string TransactionNumber = 4;
+    string TransactionStatus = 5;
+}
+
+message BankReconModifyResponse {
+    PStatus Status = 1;
+}
+
+message ProviderReconRegisterRequest {
+	string TenantCode = 1;
+    string ProviderCode = 2;
+    string PaymentNumber = 3;
+    string PaymentLinkNumber = 4;
+    string PaymentMethod = 5;
+    string ProviderReferenceId = 6;
+    string PartnerReferenceId = 7;
+    double TransactionAmount = 8;
+    string CurrencyCode = 9;
+    google.protobuf.Timestamp TransactionAt = 10;
+    string PaymentRequestStatus = 11;
+}
+
+message ProviderReconRegisterResponse {
+    PStatus Status = 1;
+}

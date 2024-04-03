@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./packets";
+// services
+
+service Adapter {
+	rpc AccountRegistration(AccountRegisterRequest) returns (AccountRegisterResponse){}
+	rpc AccountUpdate(AccountUpdateRequest) returns (AccountUpdateResponse){}
+	rpc CashoutCreate(CashoutCreateRequest) returns (CashoutCreateResponse){}
+	rpc CashoutInquiry(CashoutInquiryRequest) returns (CashoutInquiryResponse){}
+    rpc BankAccountInquiry(BankAccountInquiryRequest) returns (BankAccountInquiryResponse){}
+    rpc MerchantAccountInquiry(MerchantAccountInquiryRequest) returns (MerchantAccountInquiryResponse){}
+    rpc QrCodeInquiry(QrCodeInquiryRequest) returns (QrCodeInquiryResponse){}
+}
+
+message AccountRegisterRequest {
+    string TransactionNumber = 1;
+    string BankCode = 2;
+    string BankAccountNumber = 3;
+    string AccountName = 4;
+    string CurrencyCode = 5;
+    string BlacklistCode = 6;
+    string PayRecvAccountNumber = 7;
+}
+message AccountRegisterResponse {
+    PStatus Status = 1;
+    string ResultCode = 2;
+    string ResultMessage = 3;
+}
+
+message AccountUpdateRequest {
+    string TransactionNumber = 1;
+    string BankCode = 2;
+    string BankAccountNumber = 3;
+    string AccountName = 4;
+    string CurrencyCode = 5;
+    string BlacklistCode = 6;
+    string PayRecvAccountNumber = 7;
+}
+message AccountUpdateResponse {
+    PStatus Status = 1;
+    string ResultCode = 2;
+    string ResultMessage = 3;
+}
+
+message CashoutCreateRequest {
+    string TransactionNumber = 1;
+    string HomingAccountNumber = 2;
+    string HomingAccountName = 3;
+    string BeneficiaryAccountNumber = 4;
+    string BeneficiaryAccountName = 5;
+    string BankCode = 6;
+    string TargetBankCode = 7;
+    double TransactionAmount = 8;
+    string CurrencyCode = 9;
+    google.protobuf.Timestamp TransactionAt = 10;
+    string TransactionNote = 11;
+    string PaymentNumber = 12;
+    string PaymentMethod = 13;
+    string PayRecvAccountNumber = 14;
+}
+message CashoutCreateResponse {
+    PStatus Status = 1;
+    string TransactionNumber = 2;
+    string BankTransactionNumber = 3;
+    string PayRecvAccountNumber = 4;
+    string ProviderId = 5;
+    string MerchantId = 6;
+    string ResultCode = 7;
+    string ResultMessage = 8;
+}
+
+message CashoutInquiryRequest {
+    string TransactionNumber = 1;
+    string OriginalTransactionNumber = 2;
+    string BankCode = 3;
+    google.protobuf.Timestamp TransactionAt = 4;
+}
+message CashoutInquiryResponse {
+    PStatus Status = 1;
+    string TransactionNumber = 2;
+    string OriginalTransactionNumber = 3;
+    string BankTransactionNumber = 4;
+    string ResultCode = 5;
+    string ResultMessage = 6;
+}
+
+message BankAccountInquiryRequest {
+    string TransactionNumber = 1;
+    string HomingAccountNumber = 2;
+    string BeneficiaryAccountNumber = 3;
+    string BankCode = 4;
+    string TargetBankCode = 5;
+    google.protobuf.Timestamp TransactionAt = 6;
+    string PaymentMethod = 7;
+    string PayRecvAccountNumber = 8;
+}
+message BankAccountInquiryResponse {
+    PStatus Status = 1;
+    string TransactionNumber = 2;
+    string BeneficiaryAccountName = 3;
+    string BankCode = 4;
+    string BranchCode = 5;
+}
+
+message MerchantAccountInquiryRequest {
+    string TransactionNumber = 1;
+    string BankCode = 2;
+    google.protobuf.Timestamp TransactionAt = 3;
+    string PayRecvAccountNumber = 4;
+}
+message MerchantAccountInquiryResponse {
+    PStatus Status = 1;
+    string TransactionNumber = 2;
+    string AccountNumber = 3;
+    double TotalAmount = 4;
+    double GlAmount = 5;
+    string CurrencyCode = 6;
+}
+
+message QrCodeInquiryRequest {
+    string TransactionNumber = 1;
+    string BankCode = 2;
+	string BankAccountNumber = 3;
+	string CurrencyCode = 4;
+	double TransactionAmount = 5;
+	string TransactionNote = 6;
+}
+message QrCodeInquiryResponse {
+    PStatus Status = 1;
+    string QrCode = 2;
+}

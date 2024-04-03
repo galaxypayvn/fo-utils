@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+
+option go_package = "./packets";
+// services
+
+service Smartca {
+	rpc AutoSigning(AutoSigningRequest) returns (SigningResponse){}
+	rpc ManualSigning(ManualSigningRequest) returns (SigningResponse){}
+}
+
+message AutoSigningRequest {
+    string TenantCode = 1;
+    string PaymentNumber = 2;
+}
+
+message ManualSigningRequest {
+    string TenantCode = 1;
+    string PaymentNumber = 2;
+}
+
+message SigningResponse {
+    PStatus Status = 1;
+    string TenantCode = 2;
+    string PaymentNumber = 3;
+    string SigningStatus = 4;
+    string SigningMessage = 5;
+    string Signature = 6;
+}

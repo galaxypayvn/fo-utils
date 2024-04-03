@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package packets;
+
+import "common.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "./packets";
+// services
+
+service Configuration {
+    rpc BizListInquiry(BizListInquiryRequest) returns (BizListInquiryResponse){}
+    rpc PendingPeriodRegister(PendingPeriodRegisterRequest) returns (PendingPeriodResponse){}
+	rpc PendingPeriodInquiry(PendingPeriodInquiryRequest) returns (PendingPeriodResponse){}
+
+    rpc HolidayCheck(HolidayCheckRequest) returns (HolidayCheckResponse){}
+    rpc WorkingDateInquiry(WorkingDateInquiryRequest) returns (WorkingDateInquiryResponse){}
+
+	rpc FeeRuleInquiry(FeeRuleInquiryRequest) returns (FeeRuleInquiryResponse){}
+}
+
+message BizListInquiryRequest {
+    string TenantCode = 1;
+    string ClientId = 2;
+    string BizKey = 3;
+    string BizType = 4;
+    string BizCode = 5;
+}
+
+message BizListInquiryResponse {
+    PStatus Status = 1;
+    repeated List BizList = 2;
+    
+    message List {
+        string TenantCode = 1;
+        string BizKey = 2;
+        string BizType = 3;
+        string BizCode = 4;
+        .google.protobuf.Struct BizProperties = 5;
+    } 
+}
+
+message PendingPeriodRegisterRequest {
+    string TenantCode = 1;
+    string ClientId = 2;
+    string AccountNumber = 3;
+    int64 AutoReleaseIn = 4;
+    int64 ManualReleaseIn = 5;
+}
+
+message PendingPeriodInquiryRequest {
+    string TenantCode = 1;
+    string AccountNumber = 2;
+    string CifNumber = 3;
+    string SmeNumber = 4;
+}
+
+message PendingPeriodResponse {
+    PStatus Status = 1;
+    string BizType = 2;
+    string BizCode = 3;
+    int64 AutoReleaseIn = 4;
+    int64 ManualReleaseIn = 5;
+}
+
+message HolidayCheckRequest {
+    string CountryCode = 1;
+    string HolidayDate = 2;
+    bool IsWeekendCheck = 3;
+}
+
+message HolidayCheckResponse {
+    PStatus Status = 1;
+    bool IsHoliday = 2;
+}
+
+message WorkingDateInquiryRequest {
+    string CountryCode = 1;
+    string CurrentDate = 2;
+    int32 NearByWorkingDateAdd = 3; // -1 is previous working date, 1 is next working day
+    bool IsWeekendCheck = 4;
+}
+
+message WorkingDateInquiryResponse {
+    PStatus Status = 1;
+    string NearByWorkingDate = 2;
+}
+
+message FeeRuleInquiryRequest {
+    string TenantCode = 1;
+    string BusinessId = 2;
+    string PaymentMethod = 3;
+    string CurrencyCode = 4;
+    string GeneralFeeId = 5;
+    string BaseFeeId = 6;
+    string MarkupFeeId = 7;
+}
+
+message FeeRuleFormula {
+    string FeeId = 1;
+    string FeeType = 2;
+    double VariableFeeRate = 3;
+    double FixedFeeAmount = 4;
+}
+
+message FeeRuleInquiryResponse {
+    PStatus Status = 1;
+    string TenantCode = 2;
+    string BusinessId = 3;
+    string PaymentMethod = 4;
+    string CurrencyCode = 5;
+    string FeeId = 6;
+    double MinFeeAmount = 7;
+    double MaxFeeAmount = 8;
+    repeated FeeRuleFormula Formulas = 9;
+}
