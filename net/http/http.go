@@ -68,7 +68,7 @@ func SendHTTPRequest(ctx context.Context, httpReq HTTPRequest, options *HTTPOpti
 	} else {
 		bodyBytes, err = json.Marshal(httpReq.Body)
 		if err != nil && options.ErrorLog {
-			log.Infof("HTTP error: %v errorMsg: %v", "json.Marshal error", err.Error())
+			log.Infof("HTTP error: %v errorMsg: %v", "marshal body error", err.Error())
 		}
 	}
 	if options.ResponseLog {
@@ -112,7 +112,7 @@ func SendHTTPRequest(ctx context.Context, httpReq HTTPRequest, options *HTTPOpti
 		}
 
 		responseByte, _ := io.ReadAll(resp.Body)
-		log.Infof("HTTP error: %v statusCode: %v error: %v responseData: %v", "read response error", resp.StatusCode, err.Error(), string(respBytes))
+		log.Infof("HTTP error: %v statusCode: %v error: %v responseData: %v", "internal error", resp.StatusCode, err.Error(), string(respBytes))
 		return nil, errors.New(string(responseByte))
 	}
 
