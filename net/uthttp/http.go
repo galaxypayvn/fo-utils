@@ -75,6 +75,11 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != http.StatusAccepted {
+		responseByte, _ := io.ReadAll(resp.Body)
+		log.Infof("api: %v statusCode: %v responseData: %v", httpReq.URL, resp.StatusCode, string(responseByte))
+	}
+
 	// Read response body
 	respBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
