@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	http_util "code.finan.cc/finan-one-be/fo-utils/net/http"
+	"code.finan.cc/finan-one-be/fo-utils/net/uthttp"
 	redis "github.com/redis/go-redis/v9"
 )
 
@@ -45,10 +45,10 @@ type strapiMessageCode struct {
 }
 
 type strapiMeta struct {
-	Pagination strapiPaginnation `json:"pagination"`
+	Pagination strapiPagination `json:"pagination"`
 }
 
-type strapiPaginnation struct {
+type strapiPagination struct {
 	Page      int `json:"page"`
 	PageSize  int `json:"pageSize"`
 	PageCount int `json:"pageCount"`
@@ -135,18 +135,18 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 		queryVals.Set("filters[$or][1][code][$startsWithi]", strconv.Itoa(generalGroup))
 		uri.RawQuery = queryVals.Encode()
 
-		req := http_util.HTTPRequest{
+		req := uthttp.HTTPRequest{
 			Method: http.MethodGet,
 			URL:    uri.String(),
 			Header: map[string]string{
 				"Authorization": fmt.Sprintf("Bearer %s", c.cfg.StrapiToken),
 			},
 		}
-		opt := http_util.HTTPOptions{
+		opt := uthttp.HTTPOptions{
 			Timeout: 3 * time.Second,
 		}
 
-		resp, err := http_util.SendHTTPRequest[strapiMessageCodeResp](ctx, req, opt)
+		resp, err := uthttp.SendHTTPRequest[strapiMessageCodeResp](ctx, req, opt)
 		if err != nil {
 			return nil, err
 		}
