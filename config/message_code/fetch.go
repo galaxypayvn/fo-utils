@@ -2,6 +2,7 @@ package messagecode
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -28,8 +29,14 @@ type Config struct {
 }
 
 type Client struct {
-	redisCli *redis.Client
-	cfg      Config
+	redisCli   *redis.Client
+	cfg        Config
+	messageMap map[string]messageCode
+}
+
+type messageCode struct {
+	HTTPCode int    `json:"http_code"`
+	Message  string `json:messasge"`
 }
 
 type strapiMessageCodeResp struct {
@@ -38,10 +45,11 @@ type strapiMessageCodeResp struct {
 }
 
 type strapiMessageCode struct {
-	ID      int    `json:"id"`
-	Code    int    `json:"code"`
-	Locale  string `json:"locale"`
-	Message string `json:"message"`
+	ID       int    `json:"id"`
+	Code     int    `json:"code"`
+	Locale   string `json:"locale"`
+	Message  string `json:"message"`
+	HTTPCode int    `json:"http_code"`
 }
 
 type strapiMeta struct {
@@ -63,56 +71,82 @@ func NewClient(cfg Config) *Client {
 	})
 
 	return &Client{
-		redisCli: rdb,
-		cfg:      cfg,
+		redisCli:   rdb,
+		cfg:        cfg,
+		messageMap: map[string]messageCode{},
 	}
 }
 
-func (c *Client) GetMessage(ctx context.Context, messageGroup int, messageCodes []int) (map[string]string, error) {
-	keys := MakeKeys(supportLocales, messageCodes)
+func (c *Client) GetMessage(locale string, code int) string {
+	return c.messageMap[makeKey(locale, code)].Message
+}
+
+func (c *Client) GetHTTPCode(locale string, code int) int {
+	return c.messageMap[makeKey(locale, code)].HTTPCode
+}
+
+func (c *Client) LoadMessageCode(ctx context.Context, messageGroup int, messageCodes []int) error {
+	keys := makeKeys(supportLocales, messageCodes)
 	res := c.redisCli.MGet(ctx, keys...)
 	err := res.Err()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	messages := res.Val()
-	messageMap := make(map[string]string, len(keys))
 	for idx, key := range keys {
 		if messages[idx] != nil {
 			var ok bool
-			messageMap[key], ok = messages[idx].(string)
+			rawMessageCode, ok := messages[idx].(string)
 			if !ok {
-				return nil, errors.New("message is not a string")
-			}
-		} else {
-			messageMap, err = c.getMessagesFromStrapi(ctx, messageGroup)
-			if err != nil {
-				return nil, err
+				return errors.New("message is not a string")
 			}
 
-			cmdRes := c.redisCli.MSet(ctx, messageMap)
+			var mc messageCode
+			err := json.Unmarshal([]byte(rawMessageCode), &mc)
+			if err != nil {
+				return err
+			}
+
+			c.messageMap[key] = mc
+		} else {
+			messageMap, err := c.getMessageMapFromStrapi(ctx, messageGroup)
+			if err != nil {
+				return err
+			}
+
+			c.messageMap = messageMap
+
+			byteMap, err := messageMapToByteMap(messageMap)
+			if err != nil {
+				return err
+			}
+
+			cmdRes := c.redisCli.MSet(ctx, byteMap)
 			err = cmdRes.Err()
 			if err != nil {
-				return nil, err
+				return err
 			}
 
-			return messageMap, nil
+			return nil
 		}
 
 	}
 
-	return messageMap, nil
+	return nil
 }
 
-func (c *Client) getMessagesFromStrapi(ctx context.Context, messageGroup int) (map[string]string, error) {
-	res := map[string]string{}
+func (c *Client) getMessageMapFromStrapi(ctx context.Context, messageGroup int) (map[string]messageCode, error) {
+	res := map[string]messageCode{}
 	messageCodes, err := c.getStrapiMessageCodes(ctx, messageGroup)
 	if err != nil {
 		return nil, err
 	}
 	for _, messCode := range messageCodes {
-		res[MakeKey(messCode.Locale, messCode.Code)] = messCode.Message
+		res[makeKey(messCode.Locale, messCode.Code)] = messageCode{
+			HTTPCode: messCode.HTTPCode,
+			Message:  messCode.Message,
+		}
 	}
 
 	return res, nil
@@ -129,7 +163,7 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 	for page <= totalPage {
 		queryVals := uri.Query()
 		queryVals.Set("pagination[page]", fmt.Sprintf("%d", page))
-		queryVals.Set("pagination[pageSize]", "1")
+		queryVals.Set("pagination[pageSize]", "300")
 		queryVals.Set("locale", "all")
 		queryVals.Set("filters[$or][0][code][$startsWithi]", strconv.Itoa(messageGroup))
 		queryVals.Set("filters[$or][1][code][$startsWithi]", strconv.Itoa(generalGroup))
@@ -142,11 +176,13 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 				"Authorization": fmt.Sprintf("Bearer %s", c.cfg.StrapiToken),
 			},
 		}
-		opt := uthttp.HTTPOptions{
+		cfg := uthttp.Config{
 			Timeout: 3 * time.Second,
 		}
 
-		resp, err := uthttp.SendHTTPRequest[strapiMessageCodeResp](ctx, req, opt)
+		client := uthttp.NewHTTPClient(cfg)
+
+		resp, err := uthttp.SendHTTPRequest[strapiMessageCodeResp](ctx, client, req)
 		if err != nil {
 			return nil, err
 		}
@@ -160,17 +196,32 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 	return messageCodes, nil
 }
 
-func MakeKeys(locales []string, messageCodes []int) []string {
+func messageMapToByteMap(messageMap map[string]messageCode) (map[string]any, error) {
+	byteMap := make(map[string]any, len(messageMap))
+
+	for key, val := range messageMap {
+		blob, err := json.Marshal(val)
+		if err != nil {
+			return nil, err
+		}
+
+		byteMap[key] = blob
+	}
+
+	return byteMap, nil
+}
+
+func makeKeys(locales []string, messageCodes []int) []string {
 	keys := make([]string, 0, len(locales)*len(messageCodes))
 	for _, locale := range locales {
 		for _, code := range messageCodes {
-			keys = append(keys, MakeKey(locale, code))
+			keys = append(keys, makeKey(locale, code))
 		}
 	}
 
 	return keys
 }
 
-func MakeKey(locale string, messageCode int) string {
+func makeKey(locale string, messageCode int) string {
 	return fmt.Sprintf("message_code:%s:%d", locale, messageCode)
 }
