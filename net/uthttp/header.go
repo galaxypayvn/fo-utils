@@ -2,7 +2,6 @@ package uthttp
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -55,18 +54,24 @@ type UriParse struct {
 
 func ParseIDFromUri(c *gin.Context) *uuid.UUID {
 	tID := UriParse{}
-	if err := c.ShouldBindUri(&tID); err != nil {
+	if err := c.ShouldBindUri(&tID); err != nil || len(tID.ID) == 0 {
 		_ = c.Error(err)
 		return nil
 	}
-	if len(tID.ID) == 0 {
-		_ = c.Error(fmt.Errorf("error: Empty when parse ID from URI"))
-		return nil
-	}
-	if id, err := uuid.Parse(tID.ID[0]); err != nil {
+
+	id, err := uuid.Parse(tID.ID[0])
+	if err != nil {
 		_ = c.Error(err)
 		return nil
-	} else {
-		return &id
 	}
+	return &id
+}
+
+func ParseStringIDFromUri(c *gin.Context) *string {
+	tID := UriParse{}
+	if err := c.ShouldBindUri(&tID); err != nil || len(tID.ID) == 0 {
+		_ = c.Error(err)
+		return nil
+	}
+	return &tID.ID[0]
 }
