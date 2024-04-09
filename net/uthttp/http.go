@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -17,22 +18,24 @@ type HTTPRequest struct {
 	URL    string            // URL to send the request to
 	Header map[string]string // HTTP headers
 	Body   interface{}       // Body of the request
+	LogTag string            // Tag to use for logging
 }
 
-// HTTPOptions represents options for sending an HTTP request.
-type HTTPOptions struct {
-	Timeout     time.Duration // Timeout for the request
-	ErrorLog    bool          // Whether to log errors
-	ResponseLog bool          // Whether to log responses
-	LogTag      string        // Tag to use for logging
+type Config struct {
+	Timeout time.Duration
+}
+
+func NewHTTPClient(cfg Config) *http.Client {
+	client := &http.Client{Timeout: cfg.Timeout}
+	return client
 }
 
 // SendHTTPRequest sends an HTTP request and returns the response.
 // It takes a context, an HTTPRequest, and HTTPOptions.
 // It returns the response as an interface{} and any error encountered.
-func SendHTTPRequest[T any](ctx context.Context, httpReq HTTPRequest, options HTTPOptions) (T, error) {
+func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest) (T, error) {
 	var (
-		log       = logger.WithCtx(ctx, options.LogTag)
+		log       = logger.WithCtx(ctx, httpReq.LogTag)
 		bodyBytes []byte
 		respBytes []byte
 		resp      *http.Response
@@ -44,35 +47,30 @@ func SendHTTPRequest[T any](ctx context.Context, httpReq HTTPRequest, options HT
 	if httpReq.Body != nil {
 		bodyBytes, err = json.Marshal(httpReq.Body)
 		if err != nil {
-			if options.ErrorLog {
-				log.WithError(err).Error("error marshaling request body")
-			}
+			log.WithError(err).Error("error marshaling request body")
 			return res, err
 		}
+		log.Infof("api: %v header: %v responseData: %v", httpReq.URL, httpReq.Header, string(bodyBytes))
 	}
 
 	// Create HTTP request
 	req, err := http.NewRequestWithContext(ctx, httpReq.Method, httpReq.URL, bytes.NewReader(bodyBytes))
 	if err != nil {
-		if options.ErrorLog {
-			log.WithError(err).Error("error creating HTTP request")
-		}
+		log.WithError(err).Error("error creating HTTP request")
 		return res, err
 	}
 
 	// Add headers
+	req.Header.Set("x-request-id", fmt.Sprint(ctx.Value("x-request-id")))
 	req.Header.Set("Content-Type", "application/json")
 	for k, v := range httpReq.Header {
 		req.Header.Set(k, v)
 	}
 
 	// Send HTTP request
-	client := &http.Client{Timeout: options.Timeout}
 	resp, err = client.Do(req)
 	if err != nil {
-		if options.ErrorLog {
-			log.WithError(err).Error("error sending HTTP request")
-		}
+		log.WithError(err).Error("error sending HTTP request")
 		return res, err
 	}
 	defer resp.Body.Close()
@@ -80,21 +78,15 @@ func SendHTTPRequest[T any](ctx context.Context, httpReq HTTPRequest, options HT
 	// Read response body
 	respBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
-		if options.ErrorLog {
-			log.WithError(err).Error("error reading response body")
-		}
+		log.WithError(err).Error("error reading response body")
 		return res, err
 	}
-	if options.ResponseLog {
-		log.Infof("api: %v responseData: %v", httpReq.URL, string(respBytes))
-	}
+	log.Infof("api: %v responseData: %v", httpReq.URL, string(respBytes))
 
 	// Unmarshal response
 	err = json.Unmarshal(respBytes, &res)
 	if err != nil {
-		if options.ErrorLog {
-			log.WithError(err).Error("error unmarshalling response")
-		}
+		log.WithError(err).Error("error unmarshalling response")
 		return res, err
 	}
 
