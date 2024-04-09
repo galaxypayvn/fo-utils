@@ -2,6 +2,7 @@ package valid
 
 import (
 	"github.com/google/uuid"
+	"reflect"
 	"time"
 )
 
@@ -73,4 +74,22 @@ func UUID(req *uuid.UUID) uuid.UUID {
 		return uuid.Nil
 	}
 	return *req
+}
+
+func IsSlice(v interface{}) bool {
+	if v == nil {
+		return false
+	}
+
+	t := reflect.TypeOf(v)
+	if t.Kind() != reflect.Pointer {
+		switch t.Kind() {
+		case reflect.Slice, reflect.Array:
+			return true
+		default:
+			return false
+		}
+	}
+
+	return t.Elem().Kind() == reflect.Slice
 }
