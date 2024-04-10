@@ -3,7 +3,6 @@ package messagecode
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -16,9 +15,9 @@ import (
 
 const (
 	generalGroup = 10
-)
 
-var supportLocales = []string{"en", "vi"}
+	messageGroupEmptyKey = "empty"
+)
 
 type Config struct {
 	RedisAddr            string
@@ -27,7 +26,6 @@ type Config struct {
 	StrapiMessageCodeURL string
 	StrapiToken          string
 	MessageGroup         int
-	MessageCodes         []int
 }
 
 type Client struct {
@@ -80,7 +78,7 @@ func NewClient(cfg Config) (*Client, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := client.loadMessageCode(ctx, cfg.MessageGroup, cfg.MessageCodes)
+	err := client.loadMessageCode(ctx, cfg.MessageGroup)
 	if err != nil {
 		return nil, err
 	}
@@ -89,11 +87,11 @@ func NewClient(cfg Config) (*Client, error) {
 }
 
 func (c *Client) GetMessage(locale string, code int) string {
-	return c.messageMap[makeKey(locale, code)].Message
+	return c.messageMap[makeFieldKey(locale, code)].Message
 }
 
 func (c *Client) GetHTTPCode(locale string, code int) int {
-	httpCode := c.messageMap[makeKey(locale, code)].HTTPCode
+	httpCode := c.messageMap[makeFieldKey(locale, code)].HTTPCode
 	if httpCode == 0 {
 		return fallbackMessageCodeToHTTPCode(code)
 	}
@@ -101,65 +99,64 @@ func (c *Client) GetHTTPCode(locale string, code int) int {
 	return httpCode
 }
 
-func (c *Client) loadMessageCode(ctx context.Context, messageGroup int, messageCodes []int) error {
-	keys := makeKeys(supportLocales, messageCodes)
-	res := c.redisCli.MGet(ctx, keys...)
-	err := res.Err()
-	if err != nil {
-		return err
-	}
+func (c *Client) loadMessageCode(ctx context.Context, messageGroup int) error {
+	messageGroups := []int{messageGroup, generalGroup}
+	for _, group := range messageGroups {
+		key := makeHashKey(group)
+		messageGroupRes := c.redisCli.HGetAll(ctx, key)
+		err := messageGroupRes.Err()
+		if err != nil {
+			return err
+		}
 
-	messages := res.Val()
-	for idx, key := range keys {
-		if messages[idx] != nil {
-			var ok bool
-			rawMessageCode, ok := messages[idx].(string)
-			if !ok {
-				return errors.New("message is not a string")
+		messageStrMap := messageGroupRes.Val()
+		if len(messageStrMap) != 0 {
+			_, ok := messageStrMap[messageGroupEmptyKey]
+			if ok {
+				continue
 			}
-
-			var mc messageCode
-			err := json.Unmarshal([]byte(rawMessageCode), &mc)
+			messageCodeMap, err := byteMapToMessageCodeMap(messageStrMap)
 			if err != nil {
 				return err
 			}
 
-			c.messageMap[key] = mc
+			c.mergeMessageCodesMap(messageCodeMap)
 		} else {
-			messageMap, err := c.getMessageMapFromStrapi(ctx, messageGroup)
+			messageCodeMap, err := c.getMessageGroupMapFromStrapi(ctx, group)
 			if err != nil {
 				return err
 			}
 
-			c.messageMap = messageMap
+			if len(messageCodeMap) == 0 {
+				messageCodeMap[messageGroupEmptyKey] = messageCode{}
+			}
 
-			byteMap, err := messageMapToByteMap(messageMap)
+			anyMap, err := messageMapToAnyMap(messageCodeMap)
 			if err != nil {
 				return err
 			}
 
-			cmdRes := c.redisCli.MSet(ctx, byteMap)
+			cmdRes := c.redisCli.HMSet(ctx, key, anyMap)
 			err = cmdRes.Err()
 			if err != nil {
 				return err
 			}
 
-			return nil
+			c.mergeMessageCodesMap(messageCodeMap)
 		}
-
 	}
 
 	return nil
 }
 
-func (c *Client) getMessageMapFromStrapi(ctx context.Context, messageGroup int) (map[string]messageCode, error) {
+func (c *Client) getMessageGroupMapFromStrapi(ctx context.Context, messageGroup int) (map[string]messageCode, error) {
 	res := map[string]messageCode{}
 	messageCodes, err := c.getStrapiMessageCodes(ctx, messageGroup)
 	if err != nil {
 		return nil, err
 	}
 	for _, messCode := range messageCodes {
-		res[makeKey(messCode.Locale, messCode.Code)] = messageCode{
+		res[makeFieldKey(messCode.Locale, messCode.Code)] = messageCode{
 			HTTPCode: messCode.HTTPCode,
 			Message:  messCode.Message,
 		}
@@ -181,8 +178,7 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 		queryVals.Set("pagination[page]", fmt.Sprintf("%d", page))
 		queryVals.Set("pagination[pageSize]", "300")
 		queryVals.Set("locale", "all")
-		queryVals.Set("filters[$or][0][code][$startsWithi]", strconv.Itoa(messageGroup))
-		queryVals.Set("filters[$or][1][code][$startsWithi]", strconv.Itoa(generalGroup))
+		queryVals.Set("filters[code][$startsWithi]", strconv.Itoa(messageGroup))
 		uri.RawQuery = queryVals.Encode()
 
 		req := uthttp.HTTPRequest{
@@ -212,7 +208,13 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 	return messageCodes, nil
 }
 
-func messageMapToByteMap(messageMap map[string]messageCode) (map[string]any, error) {
+func (c *Client) mergeMessageCodesMap(messageMap map[string]messageCode) {
+	for key, val := range messageMap {
+		c.messageMap[key] = val
+	}
+}
+
+func messageMapToAnyMap(messageMap map[string]messageCode) (map[string]any, error) {
 	byteMap := make(map[string]any, len(messageMap))
 
 	for key, val := range messageMap {
@@ -227,19 +229,27 @@ func messageMapToByteMap(messageMap map[string]messageCode) (map[string]any, err
 	return byteMap, nil
 }
 
-func makeKeys(locales []string, messageCodes []int) []string {
-	keys := make([]string, 0, len(locales)*len(messageCodes))
-	for _, locale := range locales {
-		for _, code := range messageCodes {
-			keys = append(keys, makeKey(locale, code))
+func byteMapToMessageCodeMap(byteMap map[string]string) (map[string]messageCode, error) {
+	messsageCodeMap := make(map[string]messageCode, len(byteMap))
+	for key, val := range byteMap {
+		var messCode messageCode
+		err := json.Unmarshal([]byte(val), &messCode)
+		if err != nil {
+			return nil, err
 		}
+
+		messsageCodeMap[key] = messCode
 	}
 
-	return keys
+	return messsageCodeMap, nil
 }
 
-func makeKey(locale string, messageCode int) string {
-	return fmt.Sprintf("messagecode:%s:%d", locale, messageCode)
+func makeHashKey(messageGroup int) string {
+	return fmt.Sprintf("messagegroup:%d", messageGroup)
+}
+
+func makeFieldKey(locale string, messageCode int) string {
+	return fmt.Sprintf("%s:%d", locale, messageCode)
 }
 
 func fallbackMessageCodeToHTTPCode(code int) int {
