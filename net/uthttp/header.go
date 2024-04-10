@@ -1,28 +1,42 @@
 package uthttp
 
 import (
-	"errors"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/google/uuid"
 )
 
 const (
-	HeaderRequestID  = "x-request-id"
-	HeaderUserID     = "x-user-id"
-	HeaderBusinessID = "x-business-id"
+	HeaderRequestID       = "x-request-id"
+	HeaderUserID          = "x-user-id"
+	HeaderBusinessID      = "x-business-id"
+	HeaderClientRequestID = "x-client-request-id"
+	HeaderDeviceID        = "x-device-id"
 )
 
-func GetIDFromHeader(req *http.Request, headerKey string) (res uuid.UUID, err error) {
+const defaultLocale = "en"
+
+func GetStringFromHeader(req *http.Request, headerKey string) (string, error) {
 	headerValue := req.Header.Get(headerKey)
 	if headerValue == "" {
-		return uuid.Nil, errors.New("empty header value")
+		return "", fmt.Errorf("empty header value %s", headerKey)
+	}
+
+	return headerValue, nil
+}
+
+func GetUUIDFromHeader(req *http.Request, headerKey string) (uuid.UUID, error) {
+	headerValue := req.Header.Get(headerKey)
+	if headerValue == "" {
+		return uuid.Nil, fmt.Errorf("empty header value %s", headerKey)
 	}
 
 	idString := strings.Split(headerValue, "|")[0]
-	res, err = uuid.Parse(idString)
+	res, err := uuid.Parse(idString)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -33,19 +47,36 @@ func GetIDFromHeader(req *http.Request, headerKey string) (res uuid.UUID, err er
 // GetBusinessIDFromHeader
 // retrieves the business ID from the request header
 func GetBusinessIDFromHeader(req *http.Request) (uuid.UUID, error) {
-	return GetIDFromHeader(req, HeaderBusinessID)
+	return GetUUIDFromHeader(req, HeaderBusinessID)
 }
 
 // GetUserIDFromHeader
 // retrieves the user ID from the request header
 func GetUserIDFromHeader(req *http.Request) (uuid.UUID, error) {
-	return GetIDFromHeader(req, HeaderUserID)
+	return GetUUIDFromHeader(req, HeaderUserID)
 }
 
 // GetRequestIDFromHeader
 // retrieves the request ID from the request header
 func GetRequestIDFromHeader(req *http.Request) (uuid.UUID, error) {
-	return GetIDFromHeader(req, HeaderRequestID)
+	return GetUUIDFromHeader(req, HeaderRequestID)
+}
+
+func GetClientRequestIDFromHeader(req *http.Request) (string, error) {
+	return GetStringFromHeader(req, HeaderClientRequestID)
+}
+
+func GetDeviceIDFromHeader(req *http.Request) (string, error) {
+	return GetStringFromHeader(req, HeaderDeviceID)
+}
+
+func GetLocaleFromHeader(r *http.Request) string {
+	locale := r.Header.Get("x-locale")
+	if locale == "" {
+		locale = defaultLocale
+	}
+
+	return locale
 }
 
 type UriParse struct {

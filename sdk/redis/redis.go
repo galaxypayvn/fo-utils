@@ -7,12 +7,26 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type Config struct {
+	Address  string
+	Password string
+	DB       int
+}
+
 type RedisRepo struct {
 	RDB *redis.Client
 }
 
-func NewRedisRepo(rdb *redis.Client) IRedisRepo {
-	return &RedisRepo{RDB: rdb}
+func NewRedisRepo(cfg Config) IRedisRepo {
+	client := redis.NewClient(&redis.Options{
+		Addr:     cfg.Address,
+		Password: cfg.Password,
+		DB:       cfg.DB,
+	})
+
+	return &RedisRepo{
+		RDB: client,
+	}
 }
 
 type IRedisRepo interface {

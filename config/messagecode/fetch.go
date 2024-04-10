@@ -26,6 +26,8 @@ type Config struct {
 	RedisDB              int
 	StrapiMessageCodeURL string
 	StrapiToken          string
+	MessageGroup         int
+	MessageCodes         []int
 }
 
 type Client struct {
@@ -36,7 +38,7 @@ type Client struct {
 
 type messageCode struct {
 	HTTPCode int    `json:"http_code"`
-	Message  string `json:messasge"`
+	Message  string `json:"messasge"`
 }
 
 type strapiMessageCodeResp struct {
@@ -63,18 +65,27 @@ type strapiPagination struct {
 	Total     int `json:"total"`
 }
 
-func NewClient(cfg Config) *Client {
+func NewClient(cfg Config) (*Client, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddr,
 		Password: cfg.RedisPwd,
 		DB:       cfg.RedisDB,
 	})
 
-	return &Client{
+	client := &Client{
 		redisCli:   rdb,
 		cfg:        cfg,
 		messageMap: map[string]messageCode{},
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := client.loadMessageCode(ctx, cfg.MessageGroup, cfg.MessageCodes)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func (c *Client) GetMessage(locale string, code int) string {
@@ -82,10 +93,15 @@ func (c *Client) GetMessage(locale string, code int) string {
 }
 
 func (c *Client) GetHTTPCode(locale string, code int) int {
-	return c.messageMap[makeKey(locale, code)].HTTPCode
+	httpCode := c.messageMap[makeKey(locale, code)].HTTPCode
+	if httpCode == 0 {
+		return fallbackMessageCodeToHTTPCode(code)
+	}
+
+	return httpCode
 }
 
-func (c *Client) LoadMessageCode(ctx context.Context, messageGroup int, messageCodes []int) error {
+func (c *Client) loadMessageCode(ctx context.Context, messageGroup int, messageCodes []int) error {
 	keys := makeKeys(supportLocales, messageCodes)
 	res := c.redisCli.MGet(ctx, keys...)
 	err := res.Err()
@@ -223,5 +239,22 @@ func makeKeys(locales []string, messageCodes []int) []string {
 }
 
 func makeKey(locale string, messageCode int) string {
-	return fmt.Sprintf("message_code:%s:%d", locale, messageCode)
+	return fmt.Sprintf("messagecode:%s:%d", locale, messageCode)
+}
+
+func fallbackMessageCodeToHTTPCode(code int) int {
+	messCodeStr := fmt.Sprintf("%d", code)
+
+	if len(messCodeStr) != 6 {
+		return http.StatusInternalServerError
+	}
+
+	switch messCodeStr[2] {
+	case '2':
+		return http.StatusOK
+	case '4':
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
 }
