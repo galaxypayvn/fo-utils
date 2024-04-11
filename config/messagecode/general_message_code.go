@@ -15,6 +15,18 @@ type Error struct {
 	Cause  error
 }
 
+func NewError(code int, cause error, params ...any) Error {
+	return Error{
+		Code:   code,
+		Params: params,
+		Cause:  cause,
+	}
+}
+
 func (err Error) Error() string {
 	return err.Cause.Error()
+}
+
+func (err Error) Unwrap() error {
+	return err.Cause
 }
