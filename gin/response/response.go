@@ -1,4 +1,4 @@
-package handler
+package response
 
 import (
 	messagecode "code.finan.cc/finan-one-be/fo-utils/config/messagecode"
@@ -9,7 +9,7 @@ import (
 	"gitlab.com/goxp/cloud0/ginext"
 )
 
-type response struct {
+type Response struct {
 	Message   Message        `json:"message"`
 	Code      int            `json:"code,omitempty"`
 	RequestID string         `json:"request_id,omitempty"`
@@ -22,21 +22,41 @@ type Message struct {
 	Params  []any  `json:"params,omitempty"`
 }
 
-type ResponseHandler struct {
+type Handler struct {
 	messClient *messagecode.Client
 }
 
-func NewResponse(messClient *messagecode.Client) *ResponseHandler {
-	return &ResponseHandler{
+func NewHandler(messClient *messagecode.Client) *Handler {
+	return &Handler{
 		messClient: messClient,
 	}
 }
 
-func (h *ResponseHandler) NewResponseWithMessageCode(c *gin.Context, messageCode int, data any, meta map[string]any, params ...any) *ginext.Response {
+func (h *Handler) GeneralSuccessResponse(c *gin.Context, params ...any) *ginext.Response {
+	return h.NewResponse(c, messagecode.GeneralSuccessCode, nil, nil, params...)
+}
+
+func (h *Handler) GeneralSuccessDataResponse(c *gin.Context, data any, params ...any) *ginext.Response {
+	return h.NewResponse(c, messagecode.GeneralSuccessCode, data, nil, params...)
+}
+
+func (h *Handler) GeneralSuccessDataMetaResponse(c *gin.Context, data any, meta map[string]any, params ...any) *ginext.Response {
+	return h.NewResponse(c, messagecode.GeneralSuccessCode, data, meta, params...)
+}
+
+func (h *Handler) GeneralSuccessCreatedDataResponse(c *gin.Context, data any, params ...any) *ginext.Response {
+	return h.NewResponse(c, messagecode.GeneralSuccessCreatedCode, data, nil, params...)
+}
+
+func (h *Handler) NewDataResponse(c *gin.Context, messagecode int, data any, params ...any) *ginext.Response {
+	return h.NewResponse(c, messagecode, data, nil, params...)
+}
+
+func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta map[string]any, params ...any) *ginext.Response {
 	requestID := c.GetString(ginext.RequestIDName)
 
 	locale := uthttp.GetLocaleFromHeader(c.Request)
-	res := &response{
+	res := &Response{
 		Message: Message{
 			Content: h.messClient.GetMessage(locale, messageCode),
 			Params:  params,

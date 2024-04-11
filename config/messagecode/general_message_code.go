@@ -2,7 +2,7 @@ package messagecode
 
 const (
 	GeneralSuccessCreatedCode = 102001
-	GeneralSuccessGetCode     = 102000
+	GeneralSuccessCode        = 102000
 	GeneralInternalErrorCode  = 105000
 	GeneralBadRequestCode     = 104000
 	GeneralNotFoundCode       = 104004

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	messagecode "code.finan.cc/finan-one-be/fo-utils/config/messagecode"
-	"code.finan.cc/finan-one-be/fo-utils/gin/handler"
+	"code.finan.cc/finan-one-be/fo-utils/gin/response"
 
 	"code.finan.cc/finan-one-be/fo-utils/net/uthttp"
 	"code.finan.cc/finan-one-be/fo-utils/sdk/redis"
@@ -13,7 +13,7 @@ import (
 	"gitlab.com/goxp/cloud0/ginext"
 )
 
-func PreventDuplicateReq(cache redis.IRedisRepo, h *handler.ResponseHandler) gin.HandlerFunc {
+func PreventDuplicateReq(cache redis.IRedisRepo, h *response.Handler) gin.HandlerFunc {
 	return ginext.WrapHandler(
 		func(r *ginext.Request) (*ginext.Response, error) {
 			c := r.GinCtx
@@ -39,7 +39,7 @@ func PreventDuplicateReq(cache redis.IRedisRepo, h *handler.ResponseHandler) gin
 
 			if found {
 				c.Abort()
-				return h.NewResponseWithMessageCode(c, messagecode.GeneralDuplicateRequest, nil, nil), nil
+				return h.NewResponse(c, messagecode.GeneralDuplicateRequest, nil, nil), nil
 			} else {
 				_ = cache.SetKey(r.Context(), key, 1, 10*time.Second)
 			}
