@@ -18,10 +18,14 @@ func HandleError(handler *response.Handler) gin.HandlerFunc {
 			if len(c.Errors) > 0 {
 				err := c.Errors[0]
 				c.Errors = nil
-				var serviceErr messagecode.Error
-				if errors.As(err, &serviceErr) {
-					return handler.NewResponse(r.GinCtx, serviceErr.Code, nil, nil), nil
-				} else {
+				var messCodeErr messagecode.Error
+				var serviceErr messagecode.ServiceError
+				switch {
+				case errors.As(err, &messCodeErr):
+					return handler.NewResponse(r.GinCtx, messCodeErr.Code, nil, nil), nil
+				case errors.As(err, &serviceErr):
+					return handler.NewRawResponse(c, serviceErr.Code, serviceErr.Message.Content, serviceErr.Data, serviceErr.Meta, serviceErr.Message.Params...), nil
+				default:
 					return handler.NewResponse(r.GinCtx, messagecode.GeneralInternalErrorCode, nil, nil), nil
 				}
 			}

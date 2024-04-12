@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,10 @@ import (
 	"time"
 
 	"gitlab.com/goxp/cloud0/logger"
+)
+
+var (
+	ErrUnmarshalResponse = errors.New("failed to unmarshal response")
 )
 
 // HTTPRequest represents an HTTP request.
@@ -38,7 +43,6 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	var (
 		log       = logger.WithCtx(ctx, httpReq.LogTag)
 		bodyBytes []byte
-		respBytes []byte
 		resp      *http.Response
 		err       error
 	)
@@ -81,20 +85,16 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		log.Infof("api: %v statusCode: %v responseData: %v", httpReq.URL, resp.StatusCode, string(responseByte))
 	}
 
-	// Read response body
-	respBytes, err = io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithError(err).Error("error reading response body")
-		return res, err
-	}
-	log.Infof("api: %v responseData: %v", httpReq.URL, string(respBytes))
+	dec := json.NewDecoder(resp.Body)
+	dec.DisallowUnknownFields()
 
 	// Unmarshal response
-	err = json.Unmarshal(respBytes, &res)
+	err = dec.Decode(&res)
 	if err != nil {
-		log.WithError(err).Error("error unmarshalling response")
-		return res, err
+		log.WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
+		return res, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 	}
+	log.Infof("api: %v responseData: %+v", httpReq.URL, res)
 
 	return res, nil
 }

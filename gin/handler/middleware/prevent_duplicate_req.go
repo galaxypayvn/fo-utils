@@ -39,7 +39,7 @@ func PreventDuplicateReq(cache redis.IRedisRepo, h *response.Handler) gin.Handle
 
 			if found {
 				c.Abort()
-				return h.NewResponse(c, messagecode.GeneralDuplicateRequest, nil, nil), nil
+				return h.NewResponse(c, messagecode.GeneralDuplicateRequestCode, nil, nil), nil
 			} else {
 				_ = cache.SetKey(r.Context(), key, 1, 10*time.Second)
 			}

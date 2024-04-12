@@ -1,6 +1,8 @@
 package response
 
 import (
+	"errors"
+
 	messagecode "code.finan.cc/finan-one-be/fo-utils/config/messagecode"
 	"code.finan.cc/finan-one-be/fo-utils/net/uthttp"
 	"code.finan.cc/finan-one-be/fo-utils/valid"
@@ -79,9 +81,36 @@ func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta ma
 	}
 }
 
+func (h *Handler) NewRawResponse(c *gin.Context, messageCode int, messageContent string, data any, meta map[string]any, params ...any) *ginext.Response {
+	requestID := c.GetString(ginext.RequestIDName)
+	locale := uthttp.GetLocaleFromHeader(c.Request)
+	resp := &ginext.Response{
+		Code: h.messClient.GetHTTPCode(locale, messageCode),
+		Body: &Response[any]{
+			Message: Message{
+				Content: messageContent,
+				Params:  params,
+			},
+			Code:      messageCode,
+			RequestID: requestID,
+			Data:      data,
+			Meta:      meta,
+		},
+	}
+
+	return resp
+}
+
 func GeneralBadRequestResponse(err error) (*ginext.Response, error) {
 	return nil, messagecode.Error{
 		Code:  messagecode.GeneralBadRequestCode,
 		Cause: err,
 	}
+}
+
+func TranslateToServiceError[T any](resp Response[T]) error {
+	if resp.Code == 0 {
+		return messagecode.NewUnknownFormatError(errors.New("missing message code"))
+	}
+	return messagecode.NewServiceError(resp.Code, resp.Message.Content, resp.Data, resp.Meta, resp.Message.Params...)
 }
