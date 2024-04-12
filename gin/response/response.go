@@ -9,11 +9,11 @@ import (
 	"gitlab.com/goxp/cloud0/ginext"
 )
 
-type Response struct {
+type Response[T any] struct {
 	Message   Message        `json:"message"`
 	Code      int            `json:"code,omitempty"`
 	RequestID string         `json:"request_id,omitempty"`
-	Data      any            `json:"data,omitempty"`
+	Data      T              `json:"data,omitempty"`
 	Meta      map[string]any `json:"meta,omitempty"`
 }
 
@@ -56,7 +56,7 @@ func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta ma
 	requestID := c.GetString(ginext.RequestIDName)
 
 	locale := uthttp.GetLocaleFromHeader(c.Request)
-	res := &Response{
+	res := &Response[any]{
 		Message: Message{
 			Content: h.messClient.GetMessage(locale, messageCode),
 			Params:  params,

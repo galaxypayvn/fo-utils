@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"gitlab.com/goxp/cloud0/logger"
@@ -96,4 +97,11 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	}
 
 	return res, nil
+}
+
+func MakeURL(baseURL, path string) string {
+	baseURL = strings.TrimSuffix(baseURL, "/")
+	path = strings.TrimPrefix(path, "/")
+
+	return fmt.Sprintf("%s/%s", baseURL, path)
 }

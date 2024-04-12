@@ -25,7 +25,7 @@ type Config struct {
 	RedisDB              int
 	StrapiMessageCodeURL string
 	StrapiToken          string
-	MessageGroup         int
+	MessageGroup         []int
 }
 
 type Client struct {
@@ -78,7 +78,7 @@ func NewClient(cfg Config) (*Client, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := client.loadMessageCode(ctx, cfg.MessageGroup)
+	err := client.loadMessageCode(ctx, cfg.MessageGroup...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +99,8 @@ func (c *Client) GetHTTPCode(locale string, code int) int {
 	return httpCode
 }
 
-func (c *Client) loadMessageCode(ctx context.Context, messageGroup int) error {
-	messageGroups := []int{messageGroup, generalGroup}
+func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) error {
+	messageGroups = append(messageGroups, generalGroup)
 	for _, group := range messageGroups {
 		key := makeHashKey(group)
 		messageGroupRes := c.redisCli.HGetAll(ctx, key)

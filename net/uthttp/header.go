@@ -16,6 +16,7 @@ const (
 	HeaderBusinessID      = "x-business-id"
 	HeaderClientRequestID = "x-client-request-id"
 	HeaderDeviceID        = "x-device-id"
+	HeaderLocale          = "x-locale"
 )
 
 const defaultLocale = "en"
@@ -71,8 +72,8 @@ func GetDeviceIDFromHeader(req *http.Request) (string, error) {
 }
 
 func GetLocaleFromHeader(r *http.Request) string {
-	locale := r.Header.Get("x-locale")
-	if locale == "" {
+	locale, err := GetStringFromHeader(r, HeaderLocale)
+	if err != nil {
 		locale = defaultLocale
 	}
 
