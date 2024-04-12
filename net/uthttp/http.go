@@ -27,8 +27,18 @@ type HTTPRequest struct {
 	LogTag string            // Tag to use for logging
 }
 
+type HTTPResponse[T any] struct {
+	StatusCode int
+	Header     map[string][]string
+	Body       T
+}
+
 type Config struct {
 	Timeout time.Duration
+}
+
+type Options struct {
+	DisallowUnknownFields bool
 }
 
 func NewHTTPClient(cfg Config) *http.Client {
@@ -36,10 +46,7 @@ func NewHTTPClient(cfg Config) *http.Client {
 	return client
 }
 
-// SendHTTPRequest sends an HTTP request and returns the response.
-// It takes a context, an HTTPRequest, and HTTPOptions.
-// It returns the response as an interface{} and any error encountered.
-func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest) (T, error) {
+func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest, opts ...Options) (HTTPResponse[T], error) {
 	var (
 		log       = logger.WithCtx(ctx, httpReq.LogTag)
 		bodyBytes []byte
@@ -47,7 +54,7 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		err       error
 	)
 
-	var res T
+	var res HTTPResponse[T]
 	// Marshal request body
 	if httpReq.Body != nil {
 		bodyBytes, err = json.Marshal(httpReq.Body)
@@ -79,6 +86,8 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		return res, err
 	}
 	defer resp.Body.Close()
+	res.StatusCode = resp.StatusCode
+	res.Header = resp.Header
 
 	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != http.StatusAccepted {
 		responseByte, _ := io.ReadAll(resp.Body)
@@ -86,15 +95,22 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	}
 
 	dec := json.NewDecoder(resp.Body)
-	dec.DisallowUnknownFields()
+	if len(opts) > 0 {
+		opt := opts[0]
+		if opt.DisallowUnknownFields {
+			dec.DisallowUnknownFields()
+		}
+	}
 
+	var body T
 	// Unmarshal response
-	err = dec.Decode(&res)
+	err = dec.Decode(&body)
 	if err != nil {
 		log.WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
 		return res, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 	}
-	log.Infof("api: %v responseData: %+v", httpReq.URL, res)
+	log.Infof("api: %v responseData: %+v", httpReq.URL, body)
+	res.Body = body
 
 	return res, nil
 }

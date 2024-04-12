@@ -10,13 +10,19 @@ import (
 	"time"
 
 	"code.finan.cc/finan-one-be/fo-utils/net/uthttp"
+	"code.finan.cc/finan-one-be/fo-utils/utils/utfunc"
 	redis "github.com/redis/go-redis/v9"
+	"gitlab.com/goxp/cloud0/logger"
 )
 
 const (
 	generalGroup = 10
 
 	messageGroupEmptyKey = "empty"
+)
+
+var (
+	supportLocales = []string{"en", "vi"}
 )
 
 type Config struct {
@@ -87,19 +93,29 @@ func NewClient(cfg Config) (*Client, error) {
 }
 
 func (c *Client) GetMessage(locale string, code int) string {
-	return c.messageMap[makeFieldKey(locale, code)].Message
+	messCode, ok := c.messageMap[makeFieldKey(locale, code)]
+	if !ok {
+		return getDefaultLocaleMessage(locale)
+	}
+
+	return messCode.Message
 }
 
 func (c *Client) GetHTTPCode(locale string, code int) int {
-	httpCode := c.messageMap[makeFieldKey(locale, code)].HTTPCode
-	if httpCode == 0 {
+	messCode, ok := c.messageMap[makeFieldKey(locale, code)]
+	if !ok {
+		return 200
+	}
+	if messCode.HTTPCode == 0 {
 		return fallbackMessageCodeToHTTPCode(code)
 	}
 
-	return httpCode
+	return messCode.HTTPCode
 }
 
 func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) error {
+	log := logger.WithCtx(ctx, utfunc.GetCurrentCaller(c, 0))
+
 	messageGroups = append(messageGroups, generalGroup)
 	for _, group := range messageGroups {
 		key := makeHashKey(group)
@@ -124,7 +140,8 @@ func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) erro
 		} else {
 			messageCodeMap, err := c.getMessageGroupMapFromStrapi(ctx, group)
 			if err != nil {
-				return err
+				log.WithError(err).Errorf("Failed to get message codes of group %d from strapi", group)
+				continue
 			}
 
 			if len(messageCodeMap) == 0 {
@@ -199,9 +216,15 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 			return nil, err
 		}
 
-		messageCodes = append(messageCodes, resp.Data...)
+		if resp.StatusCode >= 400 {
+			return nil, fmt.Errorf("get message codes from strapi status code: %d", resp.StatusCode)
+		}
 
-		totalPage = resp.Meta.Pagination.PageCount
+		body := resp.Body
+
+		messageCodes = append(messageCodes, body.Data...)
+
+		totalPage = body.Meta.Pagination.PageCount
 		page++
 	}
 

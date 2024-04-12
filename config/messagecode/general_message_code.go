@@ -14,6 +14,11 @@ const (
 	GeneralUnknownFormatCode    = 105100
 )
 
+var defaultLocaleMessage = map[string]string{
+	"vi": "Không tìm thấy message",
+	"en": "Message not found",
+}
+
 type Error struct {
 	Code   int
 	Params []any
@@ -30,6 +35,10 @@ type ServiceError struct {
 type message struct {
 	Content string `json:"content,omitempty"`
 	Params  []any  `json:"params,omitempty"`
+}
+
+func getDefaultLocaleMessage(locale string) string {
+	return defaultLocaleMessage[locale]
 }
 
 func NewError(code int, cause error, params ...any) error {
