@@ -4,12 +4,18 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"gitlab.com/goxp/cloud0/logger"
+)
+
+var (
+	ErrUnmarshalResponse = errors.New("failed to unmarshal response")
 )
 
 // HTTPRequest represents an HTTP request.
@@ -21,8 +27,18 @@ type HTTPRequest struct {
 	LogTag string            // Tag to use for logging
 }
 
+type HTTPResponse[T any] struct {
+	StatusCode int
+	Header     map[string][]string
+	Body       T
+}
+
 type Config struct {
 	Timeout time.Duration
+}
+
+type Options struct {
+	DisallowUnknownFields bool
 }
 
 func NewHTTPClient(cfg Config) *http.Client {
@@ -30,19 +46,15 @@ func NewHTTPClient(cfg Config) *http.Client {
 	return client
 }
 
-// SendHTTPRequest sends an HTTP request and returns the response.
-// It takes a context, an HTTPRequest, and HTTPOptions.
-// It returns the response as an interface{} and any error encountered.
-func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest) (T, error) {
+func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest, opts ...Options) (HTTPResponse[T], error) {
 	var (
 		log       = logger.WithCtx(ctx, httpReq.LogTag)
 		bodyBytes []byte
-		respBytes []byte
 		resp      *http.Response
 		err       error
 	)
 
-	var res T
+	var res HTTPResponse[T]
 	// Marshal request body
 	if httpReq.Body != nil {
 		bodyBytes, err = json.Marshal(httpReq.Body)
@@ -74,26 +86,38 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		return res, err
 	}
 	defer resp.Body.Close()
+	res.StatusCode = resp.StatusCode
+	res.Header = resp.Header
 
 	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != http.StatusAccepted {
 		responseByte, _ := io.ReadAll(resp.Body)
 		log.Infof("api: %v statusCode: %v responseData: %v", httpReq.URL, resp.StatusCode, string(responseByte))
 	}
 
-	// Read response body
-	respBytes, err = io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithError(err).Error("error reading response body")
-		return res, err
+	dec := json.NewDecoder(resp.Body)
+	if len(opts) > 0 {
+		opt := opts[0]
+		if opt.DisallowUnknownFields {
+			dec.DisallowUnknownFields()
+		}
 	}
-	log.Infof("api: %v responseData: %v", httpReq.URL, string(respBytes))
 
+	var body T
 	// Unmarshal response
-	err = json.Unmarshal(respBytes, &res)
+	err = dec.Decode(&body)
 	if err != nil {
-		log.WithError(err).Error("error unmarshalling response")
-		return res, err
+		log.WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
+		return res, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 	}
+	log.Infof("api: %v responseData: %+v", httpReq.URL, body)
+	res.Body = body
 
 	return res, nil
+}
+
+func MakeURL(baseURL, path string) string {
+	baseURL = strings.TrimSuffix(baseURL, "/")
+	path = strings.TrimPrefix(path, "/")
+
+	return fmt.Sprintf("%s/%s", baseURL, path)
 }
