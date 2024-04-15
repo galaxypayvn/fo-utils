@@ -211,7 +211,7 @@ func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([
 
 		client := uthttp.NewHTTPClient(cfg)
 
-		resp, err := uthttp.SendHTTPRequest[strapiMessageCodeResp](ctx, client, req)
+		resp, err := uthttp.SendHTTPRequest[strapiMessageCodeResp](ctx, client, req, uthttp.DefaultOptions())
 		if err != nil {
 			return nil, err
 		}

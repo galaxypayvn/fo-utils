@@ -22,7 +22,7 @@ func HandleError(handler *response.Handler) gin.HandlerFunc {
 				var serviceErr messagecode.ServiceError
 				switch {
 				case errors.As(err, &messCodeErr):
-					return handler.NewResponse(r.GinCtx, messCodeErr.Code, nil, nil), nil
+					return handler.NewResponse(r.GinCtx, messCodeErr.Code, nil, nil, messCodeErr.Params...), nil
 				case errors.As(err, &serviceErr):
 					return handler.NewRawResponse(c, serviceErr.Code, serviceErr.Message.Content, serviceErr.Data, serviceErr.Meta, serviceErr.Message.Params...), nil
 				default:
