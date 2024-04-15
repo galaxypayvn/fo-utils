@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,11 @@ import (
 	"time"
 
 	"gitlab.com/goxp/cloud0/logger"
+)
+
+const (
+	jsonContentType ContentType = iota
+	xmlContentType
 )
 
 var (
@@ -39,20 +45,42 @@ type Config struct {
 
 type Options struct {
 	DisallowUnknownFields bool
+	ContentType           ContentType
 }
+
+type ContentType int
 
 func NewHTTPClient(cfg Config) *http.Client {
 	client := &http.Client{Timeout: cfg.Timeout}
 	return client
 }
 
-func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest, opts ...Options) (HTTPResponse[T], error) {
+func DefaultOptions() Options {
+	return Options{
+		DisallowUnknownFields: false,
+		ContentType:           jsonContentType,
+	}
+}
+
+func WithJSONContentType(o *Options) {
+	o.ContentType = jsonContentType
+}
+
+func WithXMLContentType(o *Options) {
+	o.ContentType = xmlContentType
+}
+
+func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest, opts Options, optFuncs ...func(*Options)) (HTTPResponse[T], error) {
 	var (
 		log       = logger.WithCtx(ctx, httpReq.LogTag)
 		bodyBytes []byte
 		resp      *http.Response
 		err       error
 	)
+
+	for _, o := range optFuncs {
+		o(&opts)
+	}
 
 	var res HTTPResponse[T]
 	// Marshal request body
@@ -74,7 +102,6 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 
 	// Add headers
 	req.Header.Set("x-request-id", fmt.Sprint(ctx.Value("x-request-id")))
-	req.Header.Set("Content-Type", "application/json")
 	for k, v := range httpReq.Header {
 		req.Header.Set(k, v)
 	}
@@ -89,27 +116,37 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	res.StatusCode = resp.StatusCode
 	res.Header = resp.Header
 
-	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != http.StatusAccepted {
-		responseByte, _ := io.ReadAll(resp.Body)
-		log.Infof("api: %v statusCode: %v responseData: %v", httpReq.URL, resp.StatusCode, string(responseByte))
-	}
+	var buf bytes.Buffer
+	bodyReader := io.TeeReader(resp.Body, &buf)
 
-	dec := json.NewDecoder(resp.Body)
-	if len(opts) > 0 {
-		opt := opts[0]
-		if opt.DisallowUnknownFields {
+	var body T
+	switch opts.ContentType {
+	case xmlContentType:
+		dec := xml.NewDecoder(bodyReader)
+
+		err = dec.Decode(&body)
+	default:
+		dec := json.NewDecoder(bodyReader)
+		if opts.DisallowUnknownFields {
 			dec.DisallowUnknownFields()
+		}
+
+		// Unmarshal response
+		err = dec.Decode(&body)
+	}
+	if err != nil {
+		if !errors.Is(err, io.EOF) || buf.Len() != 0 {
+			log.WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
+			return res, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 		}
 	}
 
-	var body T
-	// Unmarshal response
-	err = dec.Decode(&body)
-	if err != nil {
-		log.WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
-		return res, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
+	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != http.StatusAccepted {
+		log.Infof("api: %v statusCode: %v responseData: %v", httpReq.URL, resp.StatusCode, buf.String())
+	} else {
+		log.Infof("api: %v statusCode: %v responseData: %+v", httpReq.URL, resp.StatusCode, body)
 	}
-	log.Infof("api: %v responseData: %+v", httpReq.URL, body)
+
 	res.Body = body
 
 	return res, nil

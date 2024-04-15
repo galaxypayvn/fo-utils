@@ -19,7 +19,7 @@ const (
 	HeaderLocale          = "x-locale"
 )
 
-const defaultLocale = "en"
+const defaultLocale = "vi"
 
 func GetStringFromHeader(req *http.Request, headerKey string) (string, error) {
 	headerValue := req.Header.Get(headerKey)
