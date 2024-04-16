@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	jsonContentType ContentType = iota
-	xmlContentType
+	JSONContentType ContentType = iota
+	XMLContentType
 )
 
 var (
@@ -46,6 +46,7 @@ type Config struct {
 type Options struct {
 	DisallowUnknownFields bool
 	ContentType           ContentType
+	ContentLength         int64
 }
 
 type ContentType int
@@ -58,56 +59,77 @@ func NewHTTPClient(cfg Config) *http.Client {
 func DefaultOptions() Options {
 	return Options{
 		DisallowUnknownFields: false,
-		ContentType:           jsonContentType,
+		ContentType:           JSONContentType,
+		ContentLength:         0,
 	}
 }
 
-func WithJSONContentType(o *Options) {
-	o.ContentType = jsonContentType
+func WithJSONContentType() func(o *Options) {
+	return func(o *Options) {
+		o.ContentType = JSONContentType
+	}
 }
 
-func WithXMLContentType(o *Options) {
-	o.ContentType = xmlContentType
+func WithXMLContentType() func(o *Options) {
+	return func(o *Options) {
+		o.ContentType = XMLContentType
+	}
+}
+
+func WithContentLength(length int64) func(o *Options) {
+	return func(o *Options) {
+		o.ContentLength = length
+	}
 }
 
 func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HTTPRequest, opts Options, optFuncs ...func(*Options)) (HTTPResponse[T], error) {
-	var (
-		log       = logger.WithCtx(ctx, httpReq.LogTag)
-		bodyBytes []byte
-		resp      *http.Response
-		err       error
-	)
+	log := logger.WithCtx(ctx, httpReq.LogTag)
 
 	for _, o := range optFuncs {
 		o(&opts)
 	}
 
 	var res HTTPResponse[T]
+	var reqReader io.Reader
+	var bodyBytes []byte
+	var err error
 	// Marshal request body
 	if httpReq.Body != nil {
-		bodyBytes, err = json.Marshal(httpReq.Body)
-		if err != nil {
-			log.WithError(err).Error("error marshaling request body")
-			return res, err
+		var ok bool
+		reqReader, ok = httpReq.Body.(io.Reader)
+		if !ok {
+			switch opts.ContentType {
+			case XMLContentType:
+				bodyBytes, err = xml.Marshal(httpReq.Body)
+			default:
+				bodyBytes, err = json.Marshal(httpReq.Body)
+			}
+			if err != nil {
+				log.WithError(err).Error("error marshaling request body")
+				return res, err
+			}
+
+			log.Infof("api: %v header: %v responseData: %v", httpReq.URL, httpReq.Header, string(bodyBytes))
+			reqReader = bytes.NewReader(bodyBytes)
 		}
-		log.Infof("api: %v header: %v responseData: %v", httpReq.URL, httpReq.Header, string(bodyBytes))
 	}
 
 	// Create HTTP request
-	req, err := http.NewRequestWithContext(ctx, httpReq.Method, httpReq.URL, bytes.NewReader(bodyBytes))
+	req, err := http.NewRequest(httpReq.Method, httpReq.URL, reqReader)
 	if err != nil {
 		log.WithError(err).Error("error creating HTTP request")
 		return res, err
 	}
 
 	// Add headers
-	req.Header.Set("x-request-id", fmt.Sprint(ctx.Value("x-request-id")))
 	for k, v := range httpReq.Header {
 		req.Header.Set(k, v)
 	}
 
+	req.ContentLength = opts.ContentLength
+
 	// Send HTTP request
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		log.WithError(err).Error("error sending HTTP request")
 		return res, err
@@ -117,21 +139,18 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	res.Header = resp.Header
 
 	var buf bytes.Buffer
-	bodyReader := io.TeeReader(resp.Body, &buf)
+	respReader := io.TeeReader(resp.Body, &buf)
 
 	var body T
 	switch opts.ContentType {
-	case xmlContentType:
-		dec := xml.NewDecoder(bodyReader)
-
+	case XMLContentType:
+		dec := xml.NewDecoder(respReader)
 		err = dec.Decode(&body)
 	default:
-		dec := json.NewDecoder(bodyReader)
+		dec := json.NewDecoder(respReader)
 		if opts.DisallowUnknownFields {
 			dec.DisallowUnknownFields()
 		}
-
-		// Unmarshal response
 		err = dec.Decode(&body)
 	}
 	if err != nil {
