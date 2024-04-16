@@ -1,8 +1,6 @@
 module code.finan.cc/finan-one-be/fo-utils
 
-go 1.21
-
-toolchain go1.21.0
+go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.9.1

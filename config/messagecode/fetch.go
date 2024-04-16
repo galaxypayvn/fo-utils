@@ -21,10 +21,6 @@ const (
 	messageGroupEmptyKey = "empty"
 )
 
-var (
-	supportLocales = []string{"en", "vi"}
-)
-
 type Config struct {
 	RedisAddr            string
 	RedisPwd             string
@@ -82,7 +78,7 @@ func NewClient(cfg Config) (*Client, error) {
 		messageMap: map[string]messageCode{},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	err := client.loadMessageCode(ctx, cfg.MessageGroup...)
 	if err != nil {
@@ -113,6 +109,7 @@ func (c *Client) GetHTTPCode(locale string, code int) int {
 	return messCode.HTTPCode
 }
 
+// Load messages from redis if cache hit or from strapi if cache miss. Ignore all error.
 func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) error {
 	log := logger.WithCtx(ctx, utfunc.GetCurrentCaller(c, 0))
 
@@ -120,13 +117,17 @@ func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) erro
 	for _, group := range messageGroups {
 		key := makeHashKey(group)
 		messageGroupRes := c.redisCli.HGetAll(ctx, key)
+		var cacheHit bool
 		err := messageGroupRes.Err()
 		if err != nil {
-			return err
+			log.WithError(err).Errorf("Failed to get message codes of group %d from redis", group)
+			cacheHit = false
+			err = nil
+		} else {
+			cacheHit = true
 		}
-
-		messageStrMap := messageGroupRes.Val()
-		if len(messageStrMap) != 0 {
+		if cacheHit {
+			messageStrMap := messageGroupRes.Val()
 			_, ok := messageStrMap[messageGroupEmptyKey]
 			if ok {
 				continue
@@ -153,11 +154,7 @@ func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) erro
 				return err
 			}
 
-			cmdRes := c.redisCli.HMSet(ctx, key, anyMap)
-			err = cmdRes.Err()
-			if err != nil {
-				return err
-			}
+			_ = c.redisCli.HMSet(ctx, key, anyMap)
 
 			c.mergeMessageCodesMap(messageCodeMap)
 		}
