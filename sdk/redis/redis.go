@@ -39,6 +39,7 @@ type IRedisRepo interface {
 	GetHash(ctx context.Context, key string, res any) (err error)
 	CheckExist(ctx context.Context, key string) (res bool, err error)
 	GetHashByKey(ctx context.Context, key string, field string) (res string, err error)
+	GetSet(ctx context.Context, key string, newValue any, expire time.Duration) (value string, err error)
 }
 
 func (r *RedisRepo) GetRepo() *redis.Client {
@@ -115,4 +116,13 @@ func (r *RedisRepo) GetHashByKey(ctx context.Context, key string, field string) 
 	}
 
 	return res, nil
+}
+
+func (r *RedisRepo) GetSet(ctx context.Context, key string, value any, expire time.Duration) (string, error) {
+	curValue, err := r.RDB.GetSet(ctx, key, value).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return curValue, err
 }
