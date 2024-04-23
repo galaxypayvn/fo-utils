@@ -93,3 +93,12 @@ func IsSlice(v interface{}) bool {
 
 	return t.Elem().Kind() == reflect.Slice
 }
+
+// GetValue returns the value of v if it is not nil, otherwise it returns the zero value of type T.
+func GetValue[T any](v *T) T {
+	if v == nil {
+		var zero T
+		return zero
+	}
+	return *v
+}

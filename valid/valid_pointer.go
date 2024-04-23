@@ -44,3 +44,13 @@ func DayTimePointer(i time.Time) *time.Time {
 func UUIDPointer(i uuid.UUID) *uuid.UUID {
 	return &i
 }
+
+/*
+GetPointer returns a pointer to the input value of type T.
+*/
+func GetPointer[T any](input T) *T {
+	if timeInput, ok := any(input).(time.Time); ok && timeInput.IsZero() {
+		return nil
+	}
+	return &input
+}
