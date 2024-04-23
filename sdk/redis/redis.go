@@ -2,9 +2,14 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+)
+
+var (
+	ErrNotFound = errors.New("not found")
 )
 
 type Config struct {
@@ -40,6 +45,7 @@ type IRedisRepo interface {
 	CheckExist(ctx context.Context, key string) (res bool, err error)
 	GetHashByKey(ctx context.Context, key string, field string) (res string, err error)
 	GetSet(ctx context.Context, key string, newValue any, expire time.Duration) (value string, err error)
+	SetTTL(ctx context.Context, key string, expire time.Duration) error
 }
 
 func (r *RedisRepo) GetRepo() *redis.Client {
@@ -78,6 +84,10 @@ func (r *RedisRepo) CheckExist(ctx context.Context, key string) (res bool, err e
 func (r *RedisRepo) SetKey(ctx context.Context, key string, value interface{}, expire time.Duration) (err error) {
 	err = r.RDB.Set(ctx, key, value, expire).Err()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return ErrNotFound
+		}
+
 		return err
 	}
 	return err
@@ -103,6 +113,10 @@ func (r *RedisRepo) SetHash(ctx context.Context, key string, value interface{}) 
 func (r *RedisRepo) GetHash(ctx context.Context, key string, res any) error {
 	err := r.RDB.HGetAll(ctx, key).Scan(res)
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return ErrNotFound
+		}
+
 		return err
 	}
 
@@ -121,8 +135,16 @@ func (r *RedisRepo) GetHashByKey(ctx context.Context, key string, field string) 
 func (r *RedisRepo) GetSet(ctx context.Context, key string, value any, expire time.Duration) (string, error) {
 	curValue, err := r.RDB.GetSet(ctx, key, value).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", ErrNotFound
+		}
+
 		return "", err
 	}
 
 	return curValue, err
+}
+
+func (r *RedisRepo) SetTTL(ctx context.Context, key string, expire time.Duration) error {
+	return r.RDB.Expire(ctx, key, expire).Err()
 }
