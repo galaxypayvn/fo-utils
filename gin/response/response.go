@@ -58,7 +58,7 @@ func (h *Handler) NewDataResponse(c *gin.Context, messagecode int, data any, par
 func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta map[string]any, params ...any) *ginext.Response {
 	locale := uthttp.GetLocaleFromHeader(c.Request)
 	messageContent := h.messClient.GetMessage(locale, messageCode)
-	return h.newRawResponse(c, messageCode, messageContent, data, meta)
+	return h.newRawResponse(c, messageCode, messageContent, data, meta, params...)
 }
 
 func (h *Handler) NewRawResponse(c *gin.Context, messageCode int, messageContent string, data any, meta map[string]any, params ...any) *ginext.Response {
