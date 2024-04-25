@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+	"reflect"
 
 	messagecode "code.finan.cc/finan-one-be/fo-utils/config/messagecode"
 	"code.finan.cc/finan-one-be/fo-utils/net/uthttp"
@@ -80,8 +81,12 @@ func (h *Handler) newRawResponse(c *gin.Context, messageCode int, messageContent
 
 	switch {
 	case valid.IsSlice(data):
-		arrData := data.([]any)
-		res.Data = arrData
+		v := reflect.ValueOf(data)
+		var out []any
+		for i := 0; i < v.Len(); i++ {
+			out = append(out, v.Index(i).Interface())
+		}
+		res.Data = out
 	case data == nil:
 		res.Data = nil
 	default:
