@@ -15,7 +15,7 @@ type Response[T any] struct {
 	Message   Message        `json:"message"`
 	Code      int            `json:"code,omitempty"`
 	RequestID string         `json:"request_id,omitempty"`
-	Data      T              `json:"data,omitempty"`
+	Data      []T            `json:"data,omitempty"`
 	Meta      map[string]any `json:"meta,omitempty"`
 }
 
@@ -55,12 +55,22 @@ func (h *Handler) NewDataResponse(c *gin.Context, messagecode int, data any, par
 }
 
 func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta map[string]any, params ...any) *ginext.Response {
+	locale := uthttp.GetLocaleFromHeader(c.Request)
+	messageContent := h.messClient.GetMessage(locale, messageCode)
+	return h.newRawResponse(c, messageCode, messageContent, data, meta)
+}
+
+func (h *Handler) NewRawResponse(c *gin.Context, messageCode int, messageContent string, data any, meta map[string]any, params ...any) *ginext.Response {
+	return h.newRawResponse(c, messageCode, messageContent, data, meta, params...)
+}
+
+func (h *Handler) newRawResponse(c *gin.Context, messageCode int, messageContent string, data any, meta map[string]any, params ...any) *ginext.Response {
 	requestID := c.GetString(ginext.RequestIDName)
 
 	locale := uthttp.GetLocaleFromHeader(c.Request)
 	res := &Response[any]{
 		Message: Message{
-			Content: h.messClient.GetMessage(locale, messageCode),
+			Content: messageContent,
 			Params:  params,
 		},
 		Code:      messageCode,
@@ -69,8 +79,11 @@ func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta ma
 	}
 
 	switch {
-	case valid.IsSlice(data), data == nil:
-		res.Data = data
+	case valid.IsSlice(data):
+		arrData := data.([]any)
+		res.Data = arrData
+	case data == nil:
+		res.Data = nil
 	default:
 		res.Data = []any{data}
 	}
@@ -79,26 +92,6 @@ func (h *Handler) NewResponse(c *gin.Context, messageCode int, data any, meta ma
 		Code: h.messClient.GetHTTPCode(locale, messageCode),
 		Body: res,
 	}
-}
-
-func (h *Handler) NewRawResponse(c *gin.Context, messageCode int, messageContent string, data any, meta map[string]any, params ...any) *ginext.Response {
-	requestID := c.GetString(ginext.RequestIDName)
-	locale := uthttp.GetLocaleFromHeader(c.Request)
-	resp := &ginext.Response{
-		Code: h.messClient.GetHTTPCode(locale, messageCode),
-		Body: &Response[any]{
-			Message: Message{
-				Content: messageContent,
-				Params:  params,
-			},
-			Code:      messageCode,
-			RequestID: requestID,
-			Data:      data,
-			Meta:      meta,
-		},
-	}
-
-	return resp
 }
 
 func GeneralBadRequestResponse(err error) (*ginext.Response, error) {
