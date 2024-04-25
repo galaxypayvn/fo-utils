@@ -78,7 +78,7 @@ func NewClient(cfg Config) (*Client, error) {
 		messageMap: map[string]messageCode{},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	err := client.loadMessageCode(ctx, cfg.MessageGroup...)
 	if err != nil {
@@ -116,18 +116,19 @@ func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) erro
 	messageGroups = append(messageGroups, generalGroup)
 	for _, group := range messageGroups {
 		key := makeHashKey(group)
-		messageGroupRes := c.redisCli.HGetAll(ctx, key)
+		messageGroupRes, err := c.redisCli.HGetAll(ctx, key).Result()
 		var cacheHit bool
-		err := messageGroupRes.Err()
 		if err != nil {
 			log.WithError(err).Errorf("Failed to get message codes of group %d from redis", group)
 			cacheHit = false
 			err = nil
+		} else if len(messageGroupRes) == 0 {
+			cacheHit = false
 		} else {
 			cacheHit = true
 		}
 		if cacheHit {
-			messageStrMap := messageGroupRes.Val()
+			messageStrMap := messageGroupRes
 			_, ok := messageStrMap[messageGroupEmptyKey]
 			if ok {
 				continue
