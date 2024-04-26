@@ -100,9 +100,6 @@ func (c *Client) GetMessage(locale string, code int) string {
 func (c *Client) GetHTTPCode(locale string, code int) int {
 	messCode, ok := c.messageMap[makeFieldKey(locale, code)]
 	if !ok {
-		return 200
-	}
-	if messCode.HTTPCode == 0 {
 		return fallbackMessageCodeToHTTPCode(code)
 	}
 
