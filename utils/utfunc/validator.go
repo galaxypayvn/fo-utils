@@ -67,7 +67,12 @@ func validateStruct(obj interface{}, v *CustomValidator) error {
 			if fieldName == "" {
 				fieldName = e.Field()
 			}
-			errorMessages = append(errorMessages, fmt.Sprintf("%s: %s", fieldName, e.Tag()))
+			println(e.ActualTag())
+			if e.Tag() != "required" {
+				errorMessages = append(errorMessages, fmt.Sprintf("%s must %s %s", fieldName, e.Tag(), e.Param()))
+			} else {
+				errorMessages = append(errorMessages, fmt.Sprintf("%s must %s", fieldName, e.Tag()))
+			}
 		}
 		return fmt.Errorf(strings.Join(errorMessages, ", "))
 	}
