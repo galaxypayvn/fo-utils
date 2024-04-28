@@ -44,7 +44,7 @@ func SetRequestIDToCTX(h *response.Handler) gin.HandlerFunc {
 				return response.GeneralBadRequestResponse(err)
 			}
 
-			ctx = context.WithValue(ctx, uthttp.HeaderRequestID, requestID.String())
+			ctx = context.WithValue(ctx, uthttp.HeaderRequestID, requestID)
 			request = request.WithContext(ctx)
 			c.Request = request
 			c.Next()
