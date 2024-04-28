@@ -106,6 +106,13 @@ func GeneralBadRequestResponse(err error) (*ginext.Response, error) {
 	}
 }
 
+func GeneralUnauthorizedResponse(err error) (*ginext.Response, error) {
+	return nil, messagecode.Error{
+		Code:  messagecode.GeneralUnauthorizedCode,
+		Cause: err,
+	}
+}
+
 func TranslateToServiceError[T any](resp Response[T]) error {
 	if resp.Code == 0 {
 		return messagecode.NewUnknownFormatError(errors.New("missing message code"))

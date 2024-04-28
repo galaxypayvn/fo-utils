@@ -9,6 +9,7 @@ const (
 	GeneralSuccessCode          = 102000
 	GeneralInternalErrorCode    = 105000
 	GeneralBadRequestCode       = 104000
+	GeneralUnauthorizedCode     = 104001
 	GeneralNotFoundCode         = 104004
 	GeneralDuplicateRequestCode = 104100
 	GeneralUnknownFormatCode    = 105100
