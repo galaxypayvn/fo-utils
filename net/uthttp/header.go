@@ -1,8 +1,10 @@
 package uthttp
 
 import (
+	valueobject "code.finan.cc/finan-one-be/fo-utils/model/value-object"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +22,26 @@ const (
 )
 
 const defaultLocale = "vi"
+
+func GetAuthInfoFromToken(req *http.Request) (res *valueobject.Auth, err error) {
+	res = &valueobject.Auth{}
+	res.BusinessID, err = GetBusinessIDFromHeader(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res.UserID, err = GetUserIDFromHeader(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res.RequestID, err = GetRequestIDFromHeader(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
 
 func GetStringFromHeader(req *http.Request, headerKey string) (string, error) {
 	headerValue := req.Header.Get(headerKey)
@@ -47,8 +69,17 @@ func GetUUIDFromHeader(req *http.Request, headerKey string) (uuid.UUID, error) {
 
 // GetBusinessIDFromHeader
 // retrieves the business ID from the request header
-func GetBusinessIDFromHeader(req *http.Request) (uuid.UUID, error) {
-	return GetUUIDFromHeader(req, HeaderBusinessID)
+func GetBusinessIDFromHeader(req *http.Request) (int64, error) {
+	sBiz, err := GetStringFromHeader(req, HeaderBusinessID)
+	if err != nil {
+		return 0, err
+	}
+	// Convert sBiz from string to int64 format using Atoi
+	biz, err := strconv.ParseInt(sBiz, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return biz, nil
 }
 
 // GetUserIDFromHeader
@@ -59,8 +90,8 @@ func GetUserIDFromHeader(req *http.Request) (uuid.UUID, error) {
 
 // GetRequestIDFromHeader
 // retrieves the request ID from the request header
-func GetRequestIDFromHeader(req *http.Request) (uuid.UUID, error) {
-	return GetUUIDFromHeader(req, HeaderRequestID)
+func GetRequestIDFromHeader(req *http.Request) (string, error) {
+	return GetStringFromHeader(req, HeaderRequestID)
 }
 
 func GetClientRequestIDFromHeader(req *http.Request) (string, error) {
