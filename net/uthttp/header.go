@@ -138,3 +138,20 @@ func ParseStringIDFromUri(c *gin.Context) *string {
 	}
 	return &tID.ID[0]
 }
+
+func ParseIntIDFromUri(c *gin.Context) *uint64 {
+	tID := UriParse{}
+	if err := c.ShouldBindUri(&tID); err != nil || len(tID.ID) == 0 {
+		_ = c.Error(err)
+		return nil
+	}
+	if len(tID.ID) > 0 {
+		id, err := strconv.ParseUint(tID.ID[0], 10, 64)
+		if err != nil {
+			_ = c.Error(err)
+			return nil
+		}
+		return &id
+	}
+	return nil
+}
