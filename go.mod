@@ -3,6 +3,7 @@ module code.finan.cc/finan-one-be/fo-utils
 go 1.22
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.15.1
 	github.com/google/uuid v1.6.0

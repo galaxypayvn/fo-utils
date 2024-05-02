@@ -2,6 +2,8 @@ package utfunc
 
 import (
 	"fmt"
+	"github.com/bwmarrin/snowflake"
+	"log"
 	"runtime"
 	"strings"
 )
@@ -26,4 +28,17 @@ func getCurrentFunctionName(level int) string {
 		return ""
 	}
 	return parts[len(parts)-1]
+}
+
+// Func to get random string using snowflake algorithm
+func GetRandomString() string {
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Generate a snowflake ID.
+	id := node.Generate()
+
+	return id.String()
 }
