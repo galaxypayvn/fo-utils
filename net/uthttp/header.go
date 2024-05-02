@@ -74,8 +74,8 @@ func GetBusinessIDFromHeader(req *http.Request) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	// Convert sBiz from string to int64 format using Atoi
-	biz, err := strconv.ParseInt(sBiz, 10, 64)
+	// Convert sBiz from string to uint64 format using Atoi
+	biz, err := strconv.ParseUint(sBiz, 10, 64)
 	if err != nil {
 		return 0, err
 	}
