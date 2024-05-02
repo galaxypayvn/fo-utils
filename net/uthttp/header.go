@@ -69,7 +69,7 @@ func GetUUIDFromHeader(req *http.Request, headerKey string) (uuid.UUID, error) {
 
 // GetBusinessIDFromHeader
 // retrieves the business ID from the request header
-func GetBusinessIDFromHeader(req *http.Request) (int64, error) {
+func GetBusinessIDFromHeader(req *http.Request) (uint64, error) {
 	sBiz, err := GetStringFromHeader(req, HeaderBusinessID)
 	if err != nil {
 		return 0, err
