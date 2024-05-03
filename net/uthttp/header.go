@@ -41,6 +41,11 @@ func GetAuthInfoFromToken(req *http.Request) (res *valueobject.Auth, err error) 
 		return nil, err
 	}
 
+	res.OrgID, err = GetOrgIDFromHeader(req)
+	if err != nil {
+		return nil, err
+	}
+	
 	return res, nil
 }
 
