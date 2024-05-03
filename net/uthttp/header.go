@@ -16,6 +16,7 @@ const (
 	HeaderRequestID       = "x-request-id"
 	HeaderUserID          = "x-user-id"
 	HeaderBusinessID      = "x-business-id"
+	HeaderOrgID           = "x-org-id"
 	HeaderClientRequestID = "x-client-request-id"
 	HeaderDeviceID        = "x-device-id"
 	HeaderLocale          = "x-locale"
@@ -80,6 +81,19 @@ func GetBusinessIDFromHeader(req *http.Request) (uint64, error) {
 		return 0, err
 	}
 	return biz, nil
+}
+
+func GetOrgIDFromHeader(req *http.Request) (uint64, error) {
+	orgIdString, err := GetStringFromHeader(req, HeaderOrgID)
+	if err != nil {
+		return 0, err
+	}
+
+	orgID, err := strconv.ParseUint(orgIdString, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return orgID, nil
 }
 
 // GetUserIDFromHeader
