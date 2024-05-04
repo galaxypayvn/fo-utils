@@ -1,7 +1,6 @@
 package utfunc
 
 import (
-	"code.finan.cc/finan-one-be/fo-utils/config/messagecode"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -51,19 +50,13 @@ func GetRandomString() string {
 func ParseRsaPublicKeyFromPemByte(pubPEM []byte) (res *rsa.PublicKey, err error) {
 	block, _ := pem.Decode(pubPEM)
 	if block == nil {
-		return nil, messagecode.Error{
-			Code:  messagecode.GeneralBadRequestCode,
-			Cause: errors.New("parse pem block containing the key failed"),
-		}
+		return nil, errors.New("parse pem block containing the key failed")
 	}
 
 	var pub any
 	pub, err = x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return nil, messagecode.Error{
-			Code:  messagecode.GeneralBadRequestCode,
-			Cause: err,
-		}
+		return nil, err
 	}
 
 	switch pub := pub.(type) {
@@ -74,8 +67,5 @@ func ParseRsaPublicKeyFromPemByte(pubPEM []byte) (res *rsa.PublicKey, err error)
 		break
 	}
 
-	return nil, messagecode.Error{
-		Code:  messagecode.GeneralBadRequestCode,
-		Cause: errors.New("key type is not RSA"),
-	}
+	return nil, errors.New("key type is not RSA")
 }
