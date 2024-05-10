@@ -60,3 +60,30 @@ func Contains[T comparable](slice []T, value T) bool {
 	}
 	return false
 }
+
+// GetMissingElements returns a slice of elements from the first slice
+// that are not present in the second slice.
+//
+// Example:
+//
+//	arr1 := []string{"a", "b", "c", "d"}
+//	arr2 := []string{"b", "c", "e"}
+//	missingElements := GetMissingElements(arr1, arr2)
+//	println(missingElements) // Output: [a d]
+func GetMissingElements[T comparable](arr1, arr2 []T) []T {
+	// Create a map to store elements from arr2 for efficient lookup.
+	arr2Map := make(map[T]struct{}, len(arr2))
+	for _, elem := range arr2 {
+		arr2Map[elem] = struct{}{}
+	}
+
+	// Iterate over arr1 and collect elements not present in arr2Map.
+	var missingElements []T
+	for _, elem := range arr1 {
+		if _, exists := arr2Map[elem]; !exists {
+			missingElements = append(missingElements, elem)
+		}
+	}
+
+	return missingElements
+}
