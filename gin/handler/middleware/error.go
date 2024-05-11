@@ -17,7 +17,7 @@ func HandleError(handler *response.Handler) gin.HandlerFunc {
 			c.Next()
 			if len(c.Errors) > 0 {
 				err := c.Errors[0]
-				c.Errors = nil
+				//c.Errors = nil
 				var messCodeErr messagecode.Error
 				var serviceErr messagecode.ServiceError
 				switch {
