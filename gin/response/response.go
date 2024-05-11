@@ -83,6 +83,7 @@ func (h *Handler) newRawResponse(c *gin.Context, messageCode int, messageContent
 	if len(c.Errors) > 0 {
 		res.Message.Error = c.Errors[0].Error()
 	}
+	c.Errors = nil
 
 	switch {
 	case valid.IsSlice(data):
