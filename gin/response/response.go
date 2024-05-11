@@ -23,6 +23,7 @@ type Response[T any] struct {
 type Message struct {
 	Content string `json:"content,omitempty"`
 	Params  []any  `json:"params,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
 type Handler struct {
@@ -77,6 +78,10 @@ func (h *Handler) newRawResponse(c *gin.Context, messageCode int, messageContent
 		Code:      messageCode,
 		RequestID: requestID,
 		Meta:      meta,
+	}
+
+	if len(c.Errors) > 0 {
+		res.Message.Error = c.Errors[0].Error()
 	}
 
 	switch {
