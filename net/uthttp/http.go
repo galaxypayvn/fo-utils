@@ -44,7 +44,7 @@ type Config struct {
 }
 
 type Options struct {
-	DisallowUnknownFields bool
+	DisallowUnknownFields bool // This field is removed, only here for backward compalibility
 	ContentType           ContentType
 	ContentLength         int64
 }
