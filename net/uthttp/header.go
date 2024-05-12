@@ -45,7 +45,9 @@ func GetAuthInfoFromToken(req *http.Request) (res *valueobject.Auth, err error) 
 	if err != nil {
 		return nil, err
 	}
-	
+
+	res.Locale = GetLocaleFromHeader(req)
+
 	return res, nil
 }
 
