@@ -8,12 +8,12 @@ import (
 )
 
 type Config struct {
-	GoogleAppCredFilepath string
-	FirebaseProjectID     string
+	GoogleAppCreds    []byte
+	FirebaseProjectID string
 }
 
 func newApp(cfg Config) (*firebase.App, error) {
-	opts := option.WithCredentialsFile(cfg.GoogleAppCredFilepath)
+	opts := option.WithCredentialsJSON(cfg.GoogleAppCreds)
 	config := &firebase.Config{
 		ProjectID: cfg.FirebaseProjectID,
 	}

@@ -11,6 +11,8 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/redis/go-redis/v9 v9.5.1
 	gitlab.com/goxp/cloud0 v1.14.1
+	golang.org/x/oauth2 v0.18.0
+	golang.org/x/text v0.14.0
 	google.golang.org/api v0.170.0
 )
 
@@ -64,10 +66,8 @@ require (
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/appengine/v2 v2.0.2 // indirect

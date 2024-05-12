@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"code.finan.cc/finan-one-be/fo-user/pkg/utils"
 	"code.finan.cc/finan-one-be/fo-utils/config/messagecode"
 	"firebase.google.com/go/v4/auth"
 )
+
+const fireTokenExpiredCode = 144018
 
 type Auth struct {
 	authClient *auth.Client
@@ -47,7 +48,7 @@ func (a *Auth) VerifyToken(ctx context.Context, idToken string) (*UserInfo, erro
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "revoked"):
-			return nil, messagecode.NewError(utils.FireTokenExpiredCode, err)
+			return nil, messagecode.NewError(fireTokenExpiredCode, err)
 		}
 		return nil, fmt.Errorf("verify id token: %w", err)
 	}
