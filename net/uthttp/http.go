@@ -125,6 +125,12 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	for k, v := range httpReq.Header {
 		req.Header.Set(k, v)
 	}
+	switch opts.ContentType {
+	case XMLContentType:
+		req.Header.Set("Content-Type", "application/xml")
+	default:
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	req.ContentLength = opts.ContentLength
 
