@@ -12,8 +12,8 @@ var (
 )
 
 func GetUserIDFromContext(ctx context.Context) (string, error) {
-	userID := ctx.Value(uthttp.HeaderUserID).(string)
-	if userID == "" {
+	userID, ok := ctx.Value(uthttp.HeaderUserID).(string)
+	if userID == "" || !ok {
 		return "", ErrNotFound
 	}
 
@@ -21,8 +21,8 @@ func GetUserIDFromContext(ctx context.Context) (string, error) {
 }
 
 func GetRequestIDFromContext(ctx context.Context) (string, error) {
-	requestID := ctx.Value(uthttp.HeaderRequestID).(string)
-	if requestID == "" {
+	requestID, ok := ctx.Value(uthttp.HeaderRequestID).(string)
+	if requestID == "" || !ok {
 		return "", ErrNotFound
 	}
 
@@ -30,8 +30,8 @@ func GetRequestIDFromContext(ctx context.Context) (string, error) {
 }
 
 func GetLocaleFromContext(ctx context.Context) (string, error) {
-	locale := ctx.Value(uthttp.HeaderLocale).(string)
-	if locale == "" {
+	locale, ok := ctx.Value(uthttp.HeaderLocale).(string)
+	if locale == "" || !ok {
 		return "", ErrNotFound
 	}
 
