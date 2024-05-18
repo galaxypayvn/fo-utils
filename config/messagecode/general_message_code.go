@@ -12,6 +12,7 @@ const (
 	GeneralUnauthorizedCode     = 104001
 	GeneralNotFoundCode         = 104004
 	GeneralDuplicateRequestCode = 104100
+	GeneralOverLimitMaxUpload   = 104101
 	GeneralUnknownFormatCode    = 105100
 )
 
