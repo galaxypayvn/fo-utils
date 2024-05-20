@@ -2,11 +2,9 @@ package response
 
 import (
 	"errors"
-	"reflect"
 
 	messagecode "code.finan.cc/finan-one-be/fo-utils/config/messagecode"
 	"code.finan.cc/finan-one-be/fo-utils/net/uthttp"
-	"code.finan.cc/finan-one-be/fo-utils/valid"
 
 	"github.com/gin-gonic/gin"
 	"gitlab.com/goxp/cloud0/ginext"
@@ -16,7 +14,7 @@ type Response[T any] struct {
 	Message   Message        `json:"message"`
 	Code      int            `json:"code,omitempty"`
 	RequestID string         `json:"request_id,omitempty"`
-	Data      []T            `json:"data,omitempty"`
+	Data      T              `json:"data,omitempty"`
 	Meta      map[string]any `json:"meta,omitempty"`
 }
 
@@ -78,26 +76,13 @@ func (h *Handler) newRawResponse(c *gin.Context, messageCode int, messageContent
 		Code:      messageCode,
 		RequestID: requestID,
 		Meta:      meta,
+		Data:      data,
 	}
 
 	if len(c.Errors) > 0 {
 		res.Message.Error = c.Errors[0].Error()
 	}
 	c.Errors = nil
-
-	switch {
-	case valid.IsSlice(data):
-		v := reflect.ValueOf(data)
-		var out []any
-		for i := 0; i < v.Len(); i++ {
-			out = append(out, v.Index(i).Interface())
-		}
-		res.Data = out
-	case data == nil:
-		res.Data = nil
-	default:
-		res.Data = []any{data}
-	}
 
 	return &ginext.Response{
 		Code: h.messClient.GetHTTPCode(locale, messageCode),
