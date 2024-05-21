@@ -126,7 +126,7 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		req.Header.Set(k, v)
 	}
 
-	if req.Header.Get("Content-Type") != "" {
+	if req.Header.Get("Content-Type") == "" {
 		switch opts.ContentType {
 		case XMLContentType:
 			req.Header.Set("Content-Type", "application/xml")
