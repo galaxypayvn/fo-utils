@@ -3,14 +3,17 @@ package firebase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
-	"code.finan.cc/finan-one-be/fo-utils/config/messagecode"
 	"firebase.google.com/go/v4/auth"
 )
 
-const fireTokenExpiredCode = 144018
+var (
+	ErrExpiredTokenCode = errors.New("firebase token has been expired")
+	ErrRevokedTokenCode = errors.New("firebase token has been revoked")
+)
 
 type Auth struct {
 	authClient *auth.Client
@@ -48,7 +51,9 @@ func (a *Auth) VerifyToken(ctx context.Context, idToken string) (*UserInfo, erro
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "revoked"):
-			return nil, messagecode.NewError(fireTokenExpiredCode, err)
+			return nil, fmt.Errorf("%w: %w", ErrRevokedTokenCode, err)
+		case strings.Contains(err.Error(), "expired"):
+			return nil, fmt.Errorf("%w: %w", ErrExpiredTokenCode, err)
 		}
 		return nil, fmt.Errorf("verify id token: %w", err)
 	}
