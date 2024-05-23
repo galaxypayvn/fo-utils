@@ -37,3 +37,15 @@ func GetLocaleFromContext(ctx context.Context) (string, error) {
 
 	return locale, nil
 }
+
+func GetBackgroundContext(ctx context.Context) context.Context {
+	bgCtx := context.Background()
+
+	requestID, _ := GetRequestIDFromContext(ctx)
+	if requestID == "" {
+		return bgCtx
+	}
+	bgCtx = context.WithValue(bgCtx, uthttp.HeaderRequestID, requestID)
+
+	return bgCtx
+}
