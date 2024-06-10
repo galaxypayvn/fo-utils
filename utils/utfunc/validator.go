@@ -59,7 +59,14 @@ func CheckValidateStruct(obj interface{}) error {
 
 // validateStruct is a helper function that performs the actual struct validation using the validator package.
 func validateStruct(obj interface{}, v *CustomValidator) error {
-	err := v.ValidateStruct(obj)
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic occurred during validation: %v", r)
+		}
+	}()
+
+	err = v.ValidateStruct(obj)
 	if err != nil {
 		var errorMessages []string
 		for _, e := range err.(validator.ValidationErrors) {
