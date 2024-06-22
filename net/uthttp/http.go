@@ -18,6 +18,7 @@ import (
 const (
 	JSONContentType ContentType = iota
 	XMLContentType
+	FormUrlencodedContentType
 )
 
 var (
@@ -76,6 +77,12 @@ func WithXMLContentType() func(o *Options) {
 	}
 }
 
+func WithFormUrlencodedContentType() func(o *Options) {
+	return func(o *Options) {
+		o.ContentType = FormUrlencodedContentType
+	}
+}
+
 func WithContentLength(length int64) func(o *Options) {
 	return func(o *Options) {
 		o.ContentLength = length
@@ -109,7 +116,7 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 				return res, err
 			}
 
-			log.Infof("api: %v header: %v responseData: %v", httpReq.URL, httpReq.Header, string(bodyBytes))
+			log.Infof("api: %v header: %v requestData: %v", httpReq.URL, httpReq.Header, string(bodyBytes))
 			reqReader = bytes.NewReader(bodyBytes)
 		}
 	}
@@ -130,6 +137,8 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		switch opts.ContentType {
 		case XMLContentType:
 			req.Header.Set("Content-Type", "application/xml")
+		case FormUrlencodedContentType:
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		default:
 			req.Header.Set("Content-Type", "application/json")
 		}
