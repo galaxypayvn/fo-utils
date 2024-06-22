@@ -137,6 +137,8 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		switch opts.ContentType {
 		case XMLContentType:
 			req.Header.Set("Content-Type", "application/xml")
+		case FormUrlencodedContentType:
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		default:
 			req.Header.Set("Content-Type", "application/json")
 		}
