@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -108,6 +110,8 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 			switch opts.ContentType {
 			case XMLContentType:
 				bodyBytes, err = xml.Marshal(httpReq.Body)
+			case FormUrlencodedContentType:
+				bodyBytes, err = structToURLValues(httpReq.Body)
 			default:
 				bodyBytes, err = json.Marshal(httpReq.Body)
 			}
@@ -194,4 +198,29 @@ func MakeURL(baseURL, path string) string {
 	path = strings.TrimPrefix(path, "/")
 
 	return fmt.Sprintf("%s/%s", baseURL, path)
+}
+
+func structToURLValues(data interface{}) ([]byte, error) {
+	values := url.Values{}
+
+	v := reflect.ValueOf(data)
+	t := v.Type()
+
+	switch v.Kind() {
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			field := t.Field(i)
+			tag := field.Tag.Get("form")
+			if tag != "" {
+				values.Set(tag, v.Field(i).String())
+			}
+		}
+	case reflect.Map:
+		for _, key := range v.MapKeys() {
+			values.Set(fmt.Sprintf("%v", key), fmt.Sprintf("%v", v.MapIndex(key)))
+		}
+	default:
+		return nil, fmt.Errorf("unsupported data type: %T", data)
+	}
+	return []byte(values.Encode()), nil
 }
