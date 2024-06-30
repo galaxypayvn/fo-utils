@@ -16,7 +16,7 @@ var customTimeToTimeConverter = copier.TypeConverter{
 			return time.Time{}, nil
 		}
 
-		return customTm.Time, nil
+		return customTm.Time.UTC(), nil
 	},
 }
 
