@@ -1,8 +1,10 @@
 package customtype
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -31,7 +33,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	for _, layout := range timeLayouts {
 		tm, err = time.Parse(string(layout), string(data))
 		if err == nil {
-			t.Time = tm
+			t.Time = tm.UTC()
 			break
 		}
 	}
@@ -41,4 +43,34 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (d *Time) Scan(value any) error {
+	var err error
+	switch s := value.(type) {
+	case time.Time:
+		d.Time = s
+	case string:
+		d.Time, err = time.Parse(time.RFC3339Nano, s)
+		if err != nil {
+			return err
+		}
+	case []byte:
+		d.Time, err = time.Parse(time.RFC3339Nano, string(s))
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("cannot scan type %T into CustomTime", value)
+	}
+
+	d.Time = d.Time.UTC()
+	return nil
+}
+
+func (d Time) Value() (driver.Value, error) {
+	if d.Time.IsZero() {
+		return nil, nil
+	}
+	return d.Time.UTC().Format(time.RFC3339Nano), nil
 }
