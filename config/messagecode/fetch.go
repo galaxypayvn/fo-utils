@@ -21,29 +21,20 @@ const (
 	messageGroupEmptyKey = "empty"
 )
 
-type Config struct {
-	RedisAddr            string
-	RedisPwd             string
-	RedisDB              int
-	StrapiMessageCodeURL string
-	StrapiToken          string
-	MessageGroup         []int
-}
-
-type Client struct {
-	redisCli   *redis.Client
-	cfg        Config
-	messageMap map[string]messageCode
-}
-
 type messageCode struct {
 	HTTPCode int    `json:"http_code"`
 	Message  string `json:"messasge"`
 }
 
 type strapiMessageCodeResp struct {
-	Data []strapiMessageCode `json:"data"`
-	Meta strapiMeta          `json:"meta"`
+	Data  []strapiMessageCode `json:"data"`
+	Error struct {
+		Status  int                    `json:"status"`
+		Name    string                 `json:"name"`
+		Message string                 `json:"message"`
+		Details ValidationErrorDetails `json:"details"`
+	} `json:"error"`
+	Meta strapiMeta `json:"meta"`
 }
 
 type strapiMessageCode struct {
@@ -63,6 +54,21 @@ type strapiPagination struct {
 	PageSize  int `json:"pageSize"`
 	PageCount int `json:"pageCount"`
 	Total     int `json:"total"`
+}
+
+type Config struct {
+	RedisAddr            string
+	RedisPwd             string
+	RedisDB              int
+	StrapiMessageCodeURL string
+	StrapiToken          string
+	MessageGroup         []int
+}
+
+type Client struct {
+	redisCli   *redis.Client
+	cfg        Config
+	messageMap map[string]messageCode
 }
 
 func NewClient(cfg Config) (*Client, error) {
@@ -177,6 +183,61 @@ func (c *Client) getMessageGroupMapFromStrapi(ctx context.Context, messageGroup 
 	return res, nil
 }
 
+func messageMapToAnyMap(messageMap map[string]messageCode) (map[string]any, error) {
+	byteMap := make(map[string]any, len(messageMap))
+
+	for key, val := range messageMap {
+		blob, err := json.Marshal(val)
+		if err != nil {
+			return nil, err
+		}
+
+		byteMap[key] = blob
+	}
+
+	return byteMap, nil
+}
+
+func byteMapToMessageCodeMap(byteMap map[string]string) (map[string]messageCode, error) {
+	messsageCodeMap := make(map[string]messageCode, len(byteMap))
+	for key, val := range byteMap {
+		var messCode messageCode
+		err := json.Unmarshal([]byte(val), &messCode)
+		if err != nil {
+			return nil, err
+		}
+
+		messsageCodeMap[key] = messCode
+	}
+
+	return messsageCodeMap, nil
+}
+
+func makeHashKey(messageGroup int) string {
+	return fmt.Sprintf("messagegroup:%d", messageGroup)
+}
+
+func makeFieldKey(locale string, messageCode int) string {
+	return fmt.Sprintf("%s:%d", locale, messageCode)
+}
+
+func fallbackMessageCodeToHTTPCode(code int) int {
+	messCodeStr := fmt.Sprintf("%d", code)
+
+	if len(messCodeStr) != 6 {
+		return http.StatusInternalServerError
+	}
+
+	switch messCodeStr[2] {
+	case '2':
+		return http.StatusOK
+	case '4':
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([]strapiMessageCode, error) {
 	totalPage := 1
 	page := 1
@@ -232,57 +293,41 @@ func (c *Client) mergeMessageCodesMap(messageMap map[string]messageCode) {
 	}
 }
 
-func messageMapToAnyMap(messageMap map[string]messageCode) (map[string]any, error) {
-	byteMap := make(map[string]any, len(messageMap))
+func (c *Client) PublishMessageCode(ctx context.Context, req CreateMessageCodeReq) (interface{}, error) {
 
-	for key, val := range messageMap {
-		blob, err := json.Marshal(val)
-		if err != nil {
-			return nil, err
+	var unifiedResponse interface{}
+	httpReq := uthttp.HTTPRequest{
+		Method: "POST",
+		URL:    c.cfg.StrapiMessageCodeURL,
+		Header: map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", c.cfg.StrapiToken),
+		},
+		Body:   req,
+		LogTag: "PublishMessageCode",
+	}
+
+	client := uthttp.NewHTTPClient(uthttp.Config{
+		Timeout: 3 * time.Second,
+	})
+
+	res, err := uthttp.SendHTTPRequest[json.RawMessage](ctx, client, httpReq, uthttp.DefaultOptions())
+	if err != nil {
+		return unifiedResponse, err
+	}
+
+	if res.StatusCode >= 400 {
+		var errorResponse ErrorResponse
+		if err := json.Unmarshal(res.Body, &errorResponse); err != nil {
+			return unifiedResponse, err
 		}
-
-		byteMap[key] = blob
-	}
-
-	return byteMap, nil
-}
-
-func byteMapToMessageCodeMap(byteMap map[string]string) (map[string]messageCode, error) {
-	messsageCodeMap := make(map[string]messageCode, len(byteMap))
-	for key, val := range byteMap {
-		var messCode messageCode
-		err := json.Unmarshal([]byte(val), &messCode)
-		if err != nil {
-			return nil, err
+		unifiedResponse = &errorResponse
+	} else {
+		var successResponse SuccessResponse
+		if err := json.Unmarshal(res.Body, &successResponse); err != nil {
+			return unifiedResponse, err
 		}
-
-		messsageCodeMap[key] = messCode
+		unifiedResponse = &successResponse
 	}
 
-	return messsageCodeMap, nil
-}
-
-func makeHashKey(messageGroup int) string {
-	return fmt.Sprintf("messagegroup:%d", messageGroup)
-}
-
-func makeFieldKey(locale string, messageCode int) string {
-	return fmt.Sprintf("%s:%d", locale, messageCode)
-}
-
-func fallbackMessageCodeToHTTPCode(code int) int {
-	messCodeStr := fmt.Sprintf("%d", code)
-
-	if len(messCodeStr) != 6 {
-		return http.StatusInternalServerError
-	}
-
-	switch messCodeStr[2] {
-	case '2':
-		return http.StatusOK
-	case '4':
-		return http.StatusBadRequest
-	default:
-		return http.StatusInternalServerError
-	}
+	return unifiedResponse, nil
 }
