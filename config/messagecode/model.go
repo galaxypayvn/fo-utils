@@ -1,40 +1,5 @@
 package messagecode
 
-type messageCode struct {
-	HTTPCode int    `json:"http_code"`
-	Message  string `json:"messasge"`
-}
-
-type strapiMessageCodeResp struct {
-	Data  []strapiMessageCode `json:"data"`
-	Error struct {
-		Status  int                    `json:"status"`
-		Name    string                 `json:"name"`
-		Message string                 `json:"message"`
-		Details ValidationErrorDetails `json:"details"`
-	} `json:"error"`
-	Meta strapiMeta `json:"meta"`
-}
-
-type strapiMessageCode struct {
-	ID       int    `json:"id"`
-	Code     int    `json:"code"`
-	Locale   string `json:"locale"`
-	Message  string `json:"message"`
-	HTTPCode int    `json:"http_code"`
-}
-
-type strapiMeta struct {
-	Pagination strapiPagination `json:"pagination"`
-}
-
-type strapiPagination struct {
-	Page      int `json:"page"`
-	PageSize  int `json:"pageSize"`
-	PageCount int `json:"pageCount"`
-	Total     int `json:"total"`
-}
-
 type CreateMessageCodeReq struct {
 	Code        int    `json:"code"`
 	HttpCode    int    `json:"http_code"`

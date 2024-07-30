@@ -21,6 +21,41 @@ const (
 	messageGroupEmptyKey = "empty"
 )
 
+type messageCode struct {
+	HTTPCode int    `json:"http_code"`
+	Message  string `json:"messasge"`
+}
+
+type strapiMessageCodeResp struct {
+	Data  []strapiMessageCode `json:"data"`
+	Error struct {
+		Status  int                    `json:"status"`
+		Name    string                 `json:"name"`
+		Message string                 `json:"message"`
+		Details ValidationErrorDetails `json:"details"`
+	} `json:"error"`
+	Meta strapiMeta `json:"meta"`
+}
+
+type strapiMessageCode struct {
+	ID       int    `json:"id"`
+	Code     int    `json:"code"`
+	Locale   string `json:"locale"`
+	Message  string `json:"message"`
+	HTTPCode int    `json:"http_code"`
+}
+
+type strapiMeta struct {
+	Pagination strapiPagination `json:"pagination"`
+}
+
+type strapiPagination struct {
+	Page      int `json:"page"`
+	PageSize  int `json:"pageSize"`
+	PageCount int `json:"pageCount"`
+	Total     int `json:"total"`
+}
+
 type Config struct {
 	RedisAddr            string
 	RedisPwd             string
@@ -146,6 +181,61 @@ func (c *Client) getMessageGroupMapFromStrapi(ctx context.Context, messageGroup 
 	}
 
 	return res, nil
+}
+
+func messageMapToAnyMap(messageMap map[string]messageCode) (map[string]any, error) {
+	byteMap := make(map[string]any, len(messageMap))
+
+	for key, val := range messageMap {
+		blob, err := json.Marshal(val)
+		if err != nil {
+			return nil, err
+		}
+
+		byteMap[key] = blob
+	}
+
+	return byteMap, nil
+}
+
+func byteMapToMessageCodeMap(byteMap map[string]string) (map[string]messageCode, error) {
+	messsageCodeMap := make(map[string]messageCode, len(byteMap))
+	for key, val := range byteMap {
+		var messCode messageCode
+		err := json.Unmarshal([]byte(val), &messCode)
+		if err != nil {
+			return nil, err
+		}
+
+		messsageCodeMap[key] = messCode
+	}
+
+	return messsageCodeMap, nil
+}
+
+func makeHashKey(messageGroup int) string {
+	return fmt.Sprintf("messagegroup:%d", messageGroup)
+}
+
+func makeFieldKey(locale string, messageCode int) string {
+	return fmt.Sprintf("%s:%d", locale, messageCode)
+}
+
+func fallbackMessageCodeToHTTPCode(code int) int {
+	messCodeStr := fmt.Sprintf("%d", code)
+
+	if len(messCodeStr) != 6 {
+		return http.StatusInternalServerError
+	}
+
+	switch messCodeStr[2] {
+	case '2':
+		return http.StatusOK
+	case '4':
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
 }
 
 func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([]strapiMessageCode, error) {
