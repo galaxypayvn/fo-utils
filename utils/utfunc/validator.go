@@ -1,6 +1,7 @@
 package utfunc
 
 import (
+	"code.finan.cc/finan-one-be/fo-utils/utils/customtype"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"reflect"
@@ -17,10 +18,19 @@ func (cv *CustomValidator) ValidateStruct(s interface{}) error {
 	return cv.validate.Struct(s)
 }
 
+func validateCustomTypeTime(fl validator.FieldLevel) bool {
+	value := fl.Field().Interface().(customtype.Time)
+	if value.IsZero() {
+		return false
+	}
+	return true
+}
+
 // NewCustomValidator creates a new CustomValidator instance
 func NewCustomValidator() *CustomValidator {
 	v := validator.New()
 	v.SetTagName("valid") // Set the tag name to "valid"
+	v.RegisterValidation("time", validateCustomTypeTime)
 	return &CustomValidator{v}
 }
 
