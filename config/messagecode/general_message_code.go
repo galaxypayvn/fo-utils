@@ -14,6 +14,8 @@ const (
 	GeneralDuplicateRequestCode = 104100
 	GeneralOverLimitMaxUpload   = 104101
 	GeneralUnknownFormatCode    = 105100
+	OtpCofirmIncorrectCode      = 104102
+	AccountNotVerifiedCode      = 104103
 )
 
 var defaultLocaleMessage = map[string]string{
