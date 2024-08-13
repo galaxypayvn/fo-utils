@@ -49,8 +49,8 @@ func TestFormatThousand(t *testing.T) {
 	}
 	for idx, tt := range tests {
 		t.Run(strconv.Itoa(idx), func(t *testing.T) {
-			if got := FormatThousand(tt.args.amount, tt.args.separate); got != tt.want {
-				t.Errorf("FormatThousand() = %v, want %v", got, tt.want)
+			if got := FormatWithThousandsSeparator(tt.args.amount, tt.args.separate); got != tt.want {
+				t.Errorf("FormatWithThousandsSeparator() = %v, want %v", got, tt.want)
 			}
 		})
 	}

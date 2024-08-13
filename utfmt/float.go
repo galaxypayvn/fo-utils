@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// FormatThousand formats a float64 amount by inserting a separator every three digits.
+// FormatWithThousandsSeparator formats a float64 amount by inserting a separator every three digits.
 //
 // Parameters:
 //
@@ -16,9 +16,9 @@ import (
 // Returns:
 //
 // - A string representing the formatted amount with separators.
-func FormatThousand(value float64, separate rune) string {
+func FormatWithThousandsSeparator(value float64, separate rune) string {
 	if value < 0 {
-		return "-" + FormatThousand(-value, separate)
+		return "-" + FormatWithThousandsSeparator(-value, separate)
 	}
 	if separate == 0 {
 		separate = ','
