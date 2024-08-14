@@ -46,3 +46,18 @@ func TransformString(input string, uppercase bool) string {
 	}
 	return strings.ToLower(result)
 }
+
+// RemoveDuplicates removes duplicate elements from a slice of strings.
+func RemoveDuplicatesInArrayString(input []string) []string {
+	uniqueMap := make(map[string]struct{})
+	for _, item := range input {
+		uniqueMap[item] = struct{}{}
+	}
+
+	uniqueSlice := make([]string, 0, len(uniqueMap))
+	for key := range uniqueMap {
+		uniqueSlice = append(uniqueSlice, key)
+	}
+
+	return uniqueSlice
+}
