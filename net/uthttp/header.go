@@ -1,11 +1,12 @@
 package uthttp
 
 import (
-	valueobject "code.finan.cc/finan-one-be/fo-utils/model/value-object"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	valueobject "code.finan.cc/finan-one-be/fo-utils/model/value-object"
 
 	"github.com/gin-gonic/gin"
 
@@ -20,9 +21,11 @@ const (
 	HeaderClientRequestID = "x-client-request-id"
 	HeaderDeviceID        = "x-device-id"
 	HeaderLocale          = "x-locale"
+	HeaderTimezone        = "x-location-timezone"
 )
 
 const defaultLocale = "vi"
+const defaultTimezone = "Asia/Ho_Chi_Minh"
 
 func GetAuthInfoFromToken(req *http.Request) (res *valueobject.Auth, err error) {
 	res = &valueobject.Auth{}
@@ -43,6 +46,7 @@ func GetAuthInfoFromToken(req *http.Request) (res *valueobject.Auth, err error) 
 
 	res.OrgID, _ = GetOrgIDFromHeader(req)
 	res.Locale = GetLocaleFromHeader(req)
+	res.Timezone = GetTimezoneFromHeader(req)
 
 	return res, nil
 }
@@ -126,6 +130,15 @@ func GetLocaleFromHeader(r *http.Request) string {
 	}
 
 	return locale
+}
+
+// GetTimezoneFromHeader
+func GetTimezoneFromHeader(r *http.Request) string {
+	timezone, err := GetStringFromHeader(r, HeaderTimezone)
+	if err != nil {
+		timezone = defaultTimezone
+	}
+	return timezone
 }
 
 type UriParse struct {

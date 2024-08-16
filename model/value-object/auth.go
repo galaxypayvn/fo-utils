@@ -8,4 +8,5 @@ type Auth struct {
 	RequestID  string    `json:"request_id" valid:"required"`
 	OrgID      uint64    `json:"org_id" valid:"required"`
 	Locale     string    `json:"locale"`
+	Timezone   string    `json:"timezone"`
 }
