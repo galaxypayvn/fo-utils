@@ -9,4 +9,5 @@ type Auth struct {
 	OrgID      uint64    `json:"org_id" valid:"required"`
 	Locale     string    `json:"locale"`
 	Timezone   string    `json:"timezone"`
+	BranchID   uuid.UUID `json:"branch_id"`
 }
