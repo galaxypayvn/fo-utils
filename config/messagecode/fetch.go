@@ -119,49 +119,49 @@ func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) erro
 	messageGroups = append(messageGroups, generalGroup)
 	for _, group := range messageGroups {
 		key := makeHashKey(group)
-		messageGroupRes, err := c.redisCli.HGetAll(ctx, key).Result()
-		var cacheHit bool
+		//messageGroupRes, err := c.redisCli.HGetAll(ctx, key).Result()
+		//var cacheHit bool
+		//if err != nil {
+		//	log.WithError(err).Errorf("Failed to get message codes of group %d from redis", group)
+		//	cacheHit = false
+		//	err = nil
+		//} else if len(messageGroupRes) == 0 {
+		//	cacheHit = false
+		//} else {
+		//	cacheHit = true
+		//}
+		//if cacheHit {
+		//	messageStrMap := messageGroupRes
+		//	_, ok := messageStrMap[messageGroupEmptyKey]
+		//	if ok {
+		//		continue
+		//	}
+		//	messageCodeMap, err := byteMapToMessageCodeMap(messageStrMap)
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	c.mergeMessageCodesMap(messageCodeMap)
+		//} else {
+		messageCodeMap, err := c.getMessageGroupMapFromStrapi(ctx, group)
 		if err != nil {
-			log.WithError(err).Errorf("Failed to get message codes of group %d from redis", group)
-			cacheHit = false
-			err = nil
-		} else if len(messageGroupRes) == 0 {
-			cacheHit = false
-		} else {
-			cacheHit = true
+			log.WithError(err).Errorf("Failed to get message codes of group %d from strapi", group)
+			continue
 		}
-		if cacheHit {
-			messageStrMap := messageGroupRes
-			_, ok := messageStrMap[messageGroupEmptyKey]
-			if ok {
-				continue
-			}
-			messageCodeMap, err := byteMapToMessageCodeMap(messageStrMap)
-			if err != nil {
-				return err
-			}
 
-			c.mergeMessageCodesMap(messageCodeMap)
-		} else {
-			messageCodeMap, err := c.getMessageGroupMapFromStrapi(ctx, group)
-			if err != nil {
-				log.WithError(err).Errorf("Failed to get message codes of group %d from strapi", group)
-				continue
-			}
-
-			if len(messageCodeMap) == 0 {
-				messageCodeMap[messageGroupEmptyKey] = messageCode{}
-			}
-
-			anyMap, err := messageMapToAnyMap(messageCodeMap)
-			if err != nil {
-				return err
-			}
-
-			_ = c.redisCli.HMSet(ctx, key, anyMap)
-
-			c.mergeMessageCodesMap(messageCodeMap)
+		if len(messageCodeMap) == 0 {
+			messageCodeMap[messageGroupEmptyKey] = messageCode{}
 		}
+
+		anyMap, err := messageMapToAnyMap(messageCodeMap)
+		if err != nil {
+			return err
+		}
+
+		_ = c.redisCli.HMSet(ctx, key, anyMap)
+
+		c.mergeMessageCodesMap(messageCodeMap)
+		//}
 	}
 
 	return nil
@@ -297,7 +297,7 @@ func (c *Client) PublishMessageCode(ctx context.Context, req CreateMessageCodeRe
 
 	var unifiedResponse interface{}
 	httpReq := uthttp.HTTPRequest{
-		Method: "POST",
+		Method: http.MethodPost,
 		URL:    c.cfg.StrapiMessageCodeURL,
 		Header: map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", c.cfg.StrapiToken),
