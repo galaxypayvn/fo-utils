@@ -32,7 +32,8 @@ Adding new message code to list to multi created
 					{
 						Code:        0,  // << required
 						HttpCode:    0,  // << required
-						Message:     "", // << required/unique
+						ViMessage:     "", // << required/unique
+						EnMessage:     "", // << required/unique
 						Description: "",
 					},
 				}

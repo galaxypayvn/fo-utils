@@ -1,10 +1,14 @@
 package messagecode
 
 type CreateMessageCodeReq struct {
-	Code        int    `json:"code"`
-	HttpCode    int    `json:"http_code"`
-	Message     string `json:"message"`
-	Description string `json:"description"`
+	Code          int    `json:"code"`
+	HttpCode      int    `json:"http_code"`
+	Description   string `json:"description"`
+	Message       string `json:"message"`
+	ViMessage     string `json:"vi_message"`
+	EnMessage     string `json:"enMessage"`
+	Localizations []int  `json:"localizations"`
+	Locale        string `json:"locale"`
 }
 
 type SuccessResponse struct {
