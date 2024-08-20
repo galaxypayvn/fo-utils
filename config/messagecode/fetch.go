@@ -296,6 +296,13 @@ func (c *Client) mergeMessageCodesMap(messageMap map[string]messageCode) {
 func (c *Client) PublishMessageCode(ctx context.Context, req CreateMessageCodeReq) (interface{}, error) {
 
 	var unifiedResponse interface{}
+	if req.EnMessage == "" || req.ViMessage == "" {
+		return nil, errors.New("missing English message or Vietnamese message")
+	}
+
+	// Prepare the initial POST request
+	req.Locale = "en"
+	req.Message = req.EnMessage
 	httpReq := uthttp.HTTPRequest{
 		Method: http.MethodPost,
 		URL:    c.cfg.StrapiMessageCodeURL,
@@ -310,6 +317,7 @@ func (c *Client) PublishMessageCode(ctx context.Context, req CreateMessageCodeRe
 		Timeout: 3 * time.Second,
 	})
 
+	// Send the initial POST request
 	res, err := uthttp.SendHTTPRequest[json.RawMessage](ctx, client, httpReq, uthttp.DefaultOptions())
 	if err != nil {
 		return unifiedResponse, err
@@ -327,6 +335,39 @@ func (c *Client) PublishMessageCode(ctx context.Context, req CreateMessageCodeRe
 			return unifiedResponse, err
 		}
 		unifiedResponse = &successResponse
+
+		// Prepare the PUT request to update the English message
+		req.Locale = "vi"
+		req.Message = req.ViMessage
+		req.Localizations = []int{successResponse.Data.ID}
+		httpReq = uthttp.HTTPRequest{
+			Method: "POST",
+			URL:    c.cfg.StrapiMessageCodeURL,
+			Header: map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", c.cfg.StrapiToken),
+			},
+			Body:   req,
+			LogTag: "PublishMessageCode",
+		}
+
+		res, err = uthttp.SendHTTPRequest[json.RawMessage](ctx, client, httpReq, uthttp.DefaultOptions())
+		if err != nil {
+			return unifiedResponse, err
+		}
+
+		if res.StatusCode >= 400 {
+			var errorResponse ErrorResponse
+			if err := json.Unmarshal(res.Body, &errorResponse); err != nil {
+				return unifiedResponse, err
+			}
+			unifiedResponse = &errorResponse
+		} else {
+			var updateResponse SuccessResponse
+			if err := json.Unmarshal(res.Body, &updateResponse); err != nil {
+				return unifiedResponse, err
+			}
+			unifiedResponse = &updateResponse
+		}
 	}
 
 	return unifiedResponse, nil
