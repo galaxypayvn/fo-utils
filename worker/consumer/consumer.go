@@ -147,7 +147,7 @@ func (s *Consumer) startConsumerRabbitmq(c rabbitmq.IConsumer, consumerJobCfg *C
 			select {
 			case delivery := <-deliveries:
 				func(delivery amqp.Delivery) {
-					/*	defer func() {
+					defer func() {
 						if r := recover(); r != nil {
 							stack := make([]byte, stackSize)
 							length := runtime.Stack(stack, true)
@@ -158,7 +158,7 @@ func (s *Consumer) startConsumerRabbitmq(c rabbitmq.IConsumer, consumerJobCfg *C
 								l.String("rabbitmq-data", string(delivery.Body)),
 							)
 						}
-					}()*/
+					}()
 					if len(delivery.Body) == 0 {
 						return
 					}
@@ -227,7 +227,7 @@ func (s *Consumer) startConsumerMQTT(c mqtt.IConsumer, consumerJobCfg *ConsumerH
 	defer wait.Done()
 	r := c.GetReceiver(consumerJobCfg.Topic, 2)
 	r.Handle(s.ctx, func(ctx context.Context, msg []byte) error {
-		/*defer func() {
+		defer func() {
 			if r := recover(); r != nil {
 				stack := make([]byte, stackSize)
 				length := runtime.Stack(stack, true)
@@ -238,7 +238,7 @@ func (s *Consumer) startConsumerMQTT(c mqtt.IConsumer, consumerJobCfg *ConsumerH
 					l.String("mqtt-data", string(msg)),
 				)
 			}
-		}()*/
+		}()
 		s.ll.Info("[ConsumerMQTT] Received message from MQTT", l.String("topic", consumerJobCfg.Topic))
 
 		// Call handler and get result
@@ -252,7 +252,7 @@ func (s *Consumer) startConsumerRedisQueue(c redisqueue.IConsumer, consumerJobCf
 	defer wait.Done()
 	r := c.GetReceiver(consumerJobCfg.Topic)
 	r.Handle(s.ctx, consumerJobCfg.JobOptions, func(c *redisqueue.WContext, job *work.Job) error {
-		/*defer func() {
+		defer func() {
 			if r := recover(); r != nil {
 				stack := make([]byte, stackSize)
 				length := runtime.Stack(stack, true)
@@ -263,7 +263,7 @@ func (s *Consumer) startConsumerRedisQueue(c redisqueue.IConsumer, consumerJobCf
 					l.Any("redisqueue-args", job.Args),
 				)
 			}
-		}()*/
+		}()
 		data, err := json.Marshal(job.Args)
 		if err != nil {
 			return err

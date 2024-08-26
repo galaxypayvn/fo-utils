@@ -3,6 +3,7 @@ package redisqueue
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"
 	"time"
@@ -70,6 +71,25 @@ func NewConsumer(cfg *Config) (IConsumer, error) {
 				LastError:  c.LastErr,
 			}
 
+			defer func() {
+				if r := recover(); r != nil {
+					// Bắt lỗi panic và gán vào biến mdlErr
+					mdlErr := fmt.Errorf("panic: %v", r)
+
+					// Cập nhật trạng thái job log cho panic
+					jobLog.Status = "failed"
+					jobLog.Error = mdlErr.Error()
+
+					// Serialize log data to JSON
+					jobLogBytes, _ := json.Marshal(jobLog)
+
+					// Đẩy log dữ liệu vào queue khi xảy ra panic
+					if sendErr := enqueuer.SendBytes(jobLogBytes); sendErr != nil {
+						ll.Error("Unable to push log data into queue", l.Error(sendErr))
+					}
+				}
+			}()
+
 			// Execute the job and record errors if any
 			mdlErr := next()
 
@@ -124,7 +144,7 @@ func (r *receiver) Handle(ctx context.Context, jobOptions JobOptions, handler Ev
 		jobOptions.Priority = 1
 	}
 	if jobOptions.MaxFails == 0 {
-		jobOptions.MaxFails = 2 // set 2 nghĩa là cho phép thực hiện lại 1 lần nữa khi lỗi,
+		jobOptions.MaxFails = 1 // set 1 nghĩa là ko thực hiện lại khi lỗi,  set 2 nghĩa là cho phép thực hiện lại 1 lần nữa khi lỗi,
 	}
 
 	r.consumer.JobWithOptions(r.topic, work.JobOptions{
