@@ -93,6 +93,14 @@ func (s *Consumer) Start() {
 			case ModeRedisQueue:
 				go func(consumerCfg *ConsumerHandlerConfig) {
 					defer wait.Done()
+					groupConfig := item.cfg.(*redisqueue.Config)
+					redisqueueMode, _ = redisqueue.NewConsumer(groupConfig)
+					s.startConsumerRedisQueue(redisqueueMode, consumerCfg, &wait)
+				}(consumerJobCfg)
+
+			case ModeRedisQueueTmp:
+				go func(consumerCfg *ConsumerHandlerConfig) {
+					defer wait.Done()
 					redisqueueModeMutex.Lock()         // Lock to prevent concurrent access
 					defer redisqueueModeMutex.Unlock() // Ensure unlock after use
 					// TODO: Sử dụng sync.Once để đảm bảo chỉ tạo một lần, tránh tạo nhiều worker pool lúc băn log trong middleware, sẽ ko có woker nào xử lý do khác pool
@@ -102,7 +110,6 @@ func (s *Consumer) Start() {
 					})
 					s.startConsumerRedisQueue(redisqueueMode, consumerCfg, &wait)
 				}(consumerJobCfg)
-
 			default:
 				s.ll.Warn("[Consumer] unknown mode", l.Any("mode", item.mode))
 				wait.Done()
