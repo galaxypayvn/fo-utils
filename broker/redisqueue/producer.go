@@ -35,7 +35,14 @@ func NewProducer(cfg *Config) (IProducer, error) {
 		IdleTimeout: _defaultIdleTimeout,
 		Wait:        true,
 		Dial: func() (redis.Conn, error) {
-			return redis.DialURL(cfg.Address, redis.DialDatabase(cfg.Database), redis.DialPassword(cfg.Password))
+			options := []redis.DialOption{
+				redis.DialDatabase(cfg.Database),
+			}
+			if cfg.Password != "" {
+				options = append(options, redis.DialPassword(cfg.Password))
+			}
+
+			return redis.DialURL(cfg.Address, options...)
 		},
 	}
 
