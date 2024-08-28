@@ -52,9 +52,10 @@ func (s *Consumer) Start() {
 
 	s.ll.Info("[Consumer] Start Consumer")
 	var (
-		wait               sync.WaitGroup
-		redisqueueMode     redisqueue.IConsumer
-		redisqueueModeOnce sync.Once
+		wait                sync.WaitGroup
+		redisqueueMode      redisqueue.IConsumer
+		redisqueueModeOnce  sync.Once
+		redisqueueModeMutex sync.Mutex
 	)
 	// Start consumers for each job configuration
 	for _, item := range s.ConsumerJob {
@@ -92,9 +93,11 @@ func (s *Consumer) Start() {
 			case ModeRedisQueue:
 				go func(consumerCfg *ConsumerHandlerConfig) {
 					defer wait.Done()
-					groupConfig := item.cfg.(*redisqueue.Config)
+					redisqueueModeMutex.Lock()         // Lock to prevent concurrent access
+					defer redisqueueModeMutex.Unlock() // Ensure unlock after use
 					// TODO: Sử dụng sync.Once để đảm bảo chỉ tạo một lần, tránh tạo nhiều worker pool lúc băn log trong middleware, sẽ ko có woker nào xử lý do khác pool
 					redisqueueModeOnce.Do(func() {
+						groupConfig := item.cfg.(*redisqueue.Config)
 						redisqueueMode, _ = redisqueue.NewConsumer(groupConfig)
 					})
 					s.startConsumerRedisQueue(redisqueueMode, consumerCfg, &wait)
@@ -280,7 +283,10 @@ func (s *Consumer) startConsumerRedisQueue(c redisqueue.IConsumer, consumerJobCf
 			return errors.New("job failed, retry requested, err: " + string(resp.Message))
 		case workerstatus.Drop:
 			// If you need to drop the job, don't retry and consider it done
-			return nil
+			if len(resp.Message) == 0 {
+				return errors.New("job failed, end requested, err: no additional information")
+			}
+			return errors.New("job failed, end requested, err: " + string(resp.Message))
 		case workerstatus.Success:
 			// If successful, complete the job
 			return nil
