@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	ModeEventbus   = "event_bus"
-	ModeRabbitmq   = "rabbitmq"
-	ModeMQTT       = "mqtt"
-	ModeRedisQueue = "redis_queue"
+	ModeEventbus      = "event_bus"
+	ModeRabbitmq      = "rabbitmq"
+	ModeMQTT          = "mqtt"
+	ModeRedisQueue    = "redis_queue"
+	ModeRedisQueueTmp = "redis_queue_tmp"
 )
 
 // Event ...
