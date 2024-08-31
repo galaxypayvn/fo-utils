@@ -87,7 +87,7 @@ func NewClient(cfg Config) (*Client, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := client.loadMessageCode(ctx, cfg.MessageGroup...)
+	err := client.LoadMessageCode(ctx, cfg.MessageGroup...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (c *Client) GetHTTPCode(locale string, code int) int {
 }
 
 // Load messages from redis if cache hit or from strapi if cache miss. Ignore all error.
-func (c *Client) loadMessageCode(ctx context.Context, messageGroups ...int) error {
+func (c *Client) LoadMessageCode(ctx context.Context, messageGroups ...int) error {
 	log := logger.WithCtx(ctx, utfunc.GetCurrentCaller(c, 0))
 
 	messageGroups = append(messageGroups, generalGroup)
