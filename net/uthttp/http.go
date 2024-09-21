@@ -177,7 +177,7 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 	}
 	if err != nil {
 		if !errors.Is(err, io.EOF) || buf.Len() != 0 {
-			log.WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
+			log.WithField("response", res).WithError(err).Errorf("api: %v error unmarshalling response", httpReq.URL)
 			return res, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 		}
 	}
