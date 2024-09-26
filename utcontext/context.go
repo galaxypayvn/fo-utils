@@ -1,6 +1,7 @@
 package utcontext
 
 import (
+	valueobject "code.finan.cc/finan-one-be/fo-utils/model/value-object"
 	"context"
 	"errors"
 
@@ -10,6 +11,16 @@ import (
 var (
 	ErrNotFound = errors.New("value not found in context")
 )
+
+func SetAuthInfoToContext(ctx context.Context, authInfo *valueobject.Auth) context.Context {
+	ctx = context.WithValue(ctx, uthttp.HeaderRequestID, authInfo.RequestID)
+	ctx = context.WithValue(ctx, uthttp.HeaderUserID, authInfo.UserID)
+	ctx = context.WithValue(ctx, uthttp.HeaderBusinessID, authInfo.BusinessID)
+	ctx = context.WithValue(ctx, uthttp.HeaderOrgID, authInfo.OrgID)
+	ctx = context.WithValue(ctx, uthttp.HeaderLocale, authInfo.Locale)
+	ctx = context.WithValue(ctx, uthttp.HeaderTimezone, authInfo.Timezone)
+	return ctx
+}
 
 func GetUserIDFromContext(ctx context.Context) (string, error) {
 	userID, ok := ctx.Value(uthttp.HeaderUserID).(string)
