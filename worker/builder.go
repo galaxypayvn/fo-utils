@@ -6,12 +6,15 @@ import (
 	redisqueue "code.finan.cc/finan-one-be/fo-utils/broker/redisqueue"
 	"code.finan.cc/finan-one-be/fo-utils/l"
 	"code.finan.cc/finan-one-be/fo-utils/worker/consumer"
+	"code.finan.cc/finan-one-be/fo-utils/worker/scheduler"
 	"context"
 )
 
 // Builder ...
 type Builder interface {
 	Build() IWorker
+	BuildSchedule() Builder
+	WithScheduleConfig(cfg *scheduler.ScheduleHandlerConfig) Builder
 	BuildConsumer() Builder
 	WithEventBusConsumerConfig(chConfigs []*consumer.ConsumerHandlerConfig) Builder
 	WithEventBusConsumerHandler(key string, h consumer.IConsumerTask) Builder
@@ -26,6 +29,11 @@ type Builder interface {
 type builder struct {
 	ll  l.Logger
 	ctx context.Context
+
+	// store prepare config to init schedule
+	scheduler      *scheduler.Scheduler
+	schedulerGroup []*scheduler.SchedulerGroup
+	// mapScheduleHandler map[string]scheduler.ISchedulerTask
 
 	// store prepare config to init consumer
 	consumer           *consumer.Consumer
@@ -62,6 +70,29 @@ func (b *builder) WithEventBusConsumerHandler(key string, h consumer.IConsumerTa
 		b.mapConsumerHandler[consumer.ModeEventbus] = make(map[string]consumer.IConsumerTask)
 	}
 	b.mapConsumerHandler[consumer.ModeEventbus][key] = h
+	return b
+}
+
+// WithScheduleConfig ...
+func (b *builder) WithScheduleConfig(cfg *scheduler.ScheduleHandlerConfig) Builder {
+	g := scheduler.NewSchedulerGroup(cfg)
+	// init consumerGroup with group and topic but not have handler
+	b.schedulerGroup = append(b.schedulerGroup, g)
+	return b
+}
+
+// // WithScheduleHandler ...
+// func (b *builder) WithScheduleHandler(key string, h scheduler.ISchedulerTask) Builder {
+// 	b.mapScheduleHandler[key] = h
+// 	return b
+// }
+
+// BuildSchedule ...
+func (b *builder) BuildSchedule() Builder {
+	if len(b.schedulerGroup) == 0 {
+		return b
+	}
+	b.scheduler = scheduler.NewScheduler(b.ctx, b.schedulerGroup, b.ll)
 	return b
 }
 
