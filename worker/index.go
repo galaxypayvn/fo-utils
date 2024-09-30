@@ -2,6 +2,7 @@ package worker
 
 import (
 	"code.finan.cc/finan-one-be/fo-utils/worker/consumer"
+	"code.finan.cc/finan-one-be/fo-utils/worker/scheduler"
 	workerstatus "code.finan.cc/finan-one-be/fo-utils/worker/status"
 )
 
@@ -21,10 +22,14 @@ type IWorker interface {
 
 // Worker ...
 type worker struct {
-	consumer *consumer.Consumer
+	scheduler *scheduler.Scheduler
+	consumer  *consumer.Consumer
 }
 
 func (w *worker) Start() {
+	if w.scheduler != nil {
+		go w.scheduler.Start()
+	}
 	if w.consumer != nil {
 		go w.consumer.Start()
 	}

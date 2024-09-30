@@ -53,7 +53,8 @@ func New(ctx context.Context, ll l.Logger) Builder {
 
 func (b *builder) Build() IWorker {
 	w := &worker{
-		consumer: b.consumer,
+		scheduler: b.scheduler,
+		consumer:  b.consumer,
 	}
 	return w
 }
