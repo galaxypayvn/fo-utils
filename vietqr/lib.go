@@ -2,6 +2,7 @@ package qr
 
 import (
 	"encoding/json"
+	"fmt"
 	"gitlab.com/goxp/cloud0/logger"
 	"io/ioutil"
 	"os"
@@ -35,10 +36,6 @@ type DataInquirySample struct {
 var cacheBranch = make(map[string]Bank)
 var m sync.Mutex
 
-func init() {
-	cacheBranch = LoadBank()
-}
-
 func getBinBank(brCode string) string {
 	m.Lock()
 	defer m.Unlock()
@@ -56,6 +53,8 @@ func LoadBank() map[string]Bank {
 		logg.WithError(err).Error("Getwd.err")
 		panic(err)
 	}
+
+	fmt.Println(path.Join(mydir, "/vietQR_conf/bank.json"))
 	plan, err := ioutil.ReadFile(path.Join(mydir, "/vietQR_conf/bank.json"))
 	if err != nil {
 		logg.WithError(err).Error("ReadBankJson.err")

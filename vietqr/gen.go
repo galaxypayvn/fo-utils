@@ -61,7 +61,8 @@ func (s QRInput) String() string {
 }
 
 func (c ConsumerAccountInfomation) String() string {
-	bnbID := getBinBank(c.BankCode)
+	//bnbID := getBinBank(c.BankCode)
+	bnbID := c.BankCode
 	bnbConvert := fmt.Sprintf("%s%s%v", BNBID, lenghtStr(bnbID), bnbID)
 	consumerIDConvert := fmt.Sprintf("%s%s%v", CONSUMER_ID, lenghtStr(c.ConsumerID), c.ConsumerID)
 	consumerAccountInfomationBase := fmt.Sprintf("%v%v", bnbConvert, consumerIDConvert)
