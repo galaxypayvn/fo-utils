@@ -50,7 +50,7 @@ func GenerateQR(
 	var input = QRInput{
 		PayloadFormatIndicator: "000201",
 		PointOfInitiationMethod: func() string {
-			if *amount == 0 {
+			if nil != amount && *amount == 0 {
 				return "010211"
 			}
 			return "010212"
