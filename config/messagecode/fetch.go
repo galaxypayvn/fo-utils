@@ -6,55 +6,27 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.finan.one/finan-one-be/fo-utils/net/uthttp"
-	"code.finan.one/finan-one-be/fo-utils/utils/utfunc"
 	redis "github.com/redis/go-redis/v9"
-	"gitlab.com/goxp/cloud0/logger"
 )
 
-const (
-	generalGroup = 10
-
-	messageGroupEmptyKey = "empty"
-)
+const generalGroup = 10
 
 type messageCode struct {
 	HTTPCode int    `json:"http_code"`
 	Message  string `json:"messasge"`
 }
 
-type strapiMessageCodeResp struct {
-	Data  []strapiMessageCode `json:"data"`
-	Error struct {
-		Status  int                    `json:"status"`
-		Name    string                 `json:"name"`
-		Message string                 `json:"message"`
-		Details ValidationErrorDetails `json:"details"`
-	} `json:"error"`
-	Meta strapiMeta `json:"meta"`
-}
-
-type strapiMessageCode struct {
+type fileMessageCode struct {
 	ID       int    `json:"id"`
 	Code     int    `json:"code"`
 	Locale   string `json:"locale"`
 	Message  string `json:"message"`
 	HTTPCode int    `json:"http_code"`
-}
-
-type strapiMeta struct {
-	Pagination strapiPagination `json:"pagination"`
-}
-
-type strapiPagination struct {
-	Page      int `json:"page"`
-	PageSize  int `json:"pageSize"`
-	PageCount int `json:"pageCount"`
-	Total     int `json:"total"`
 }
 
 type Config struct {
@@ -85,10 +57,7 @@ func NewClient(cfg Config) (*Client, error) {
 		messageMap: map[string]messageCode{},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err := client.LoadMessageCode(ctx, cfg.MessageGroup...)
-	if err != nil {
+	if err := client.LoadMessageCode(context.Background(), cfg.MessageGroup...); err != nil {
 		return nil, err
 	}
 
@@ -113,109 +82,48 @@ func (c *Client) GetHTTPCode(locale string, code int) int {
 	return messCode.HTTPCode
 }
 
-// Load messages from redis if cache hit or from strapi if cache miss. Ignore all error.
-func (c *Client) LoadMessageCode(ctx context.Context, messageGroups ...int) error {
-	log := logger.WithCtx(ctx, utfunc.GetCurrentCaller(c, 0))
+// LoadMessageCode loads catalog entries from the embedded JSON file.
+// Duplicate locale+code pairs keep the last occurrence, matching previous Strapi merge order.
+func (c *Client) LoadMessageCode(_ context.Context, messageGroups ...int) error {
+	codes, err := loadEmbeddedMessageCodes()
+	if err != nil {
+		return err
+	}
 
-	messageGroups = append(messageGroups, generalGroup)
-	for _, group := range messageGroups {
-		key := makeHashKey(group)
-		//messageGroupRes, err := c.redisCli.HGetAll(ctx, key).Result()
-		//var cacheHit bool
-		//if err != nil {
-		//	log.WithError(err).Errorf("Failed to get message codes of group %d from redis", group)
-		//	cacheHit = false
-		//	err = nil
-		//} else if len(messageGroupRes) == 0 {
-		//	cacheHit = false
-		//} else {
-		//	cacheHit = true
-		//}
-		//if cacheHit {
-		//	messageStrMap := messageGroupRes
-		//	_, ok := messageStrMap[messageGroupEmptyKey]
-		//	if ok {
-		//		continue
-		//	}
-		//	messageCodeMap, err := byteMapToMessageCodeMap(messageStrMap)
-		//	if err != nil {
-		//		return err
-		//	}
-		//
-		//	c.mergeMessageCodesMap(messageCodeMap)
-		//} else {
-		messageCodeMap, err := c.getMessageGroupMapFromStrapi(ctx, group)
-		if err != nil {
-			log.WithError(err).Errorf("Failed to get message codes of group %d from strapi", group)
+	groups := append([]int{}, messageGroups...)
+	groups = append(groups, generalGroup)
+
+	messageCodeMap := make(map[string]messageCode, len(codes))
+	for _, messCode := range codes {
+		if !codeBelongsToGroups(messCode.Code, groups) {
 			continue
 		}
-
-		if len(messageCodeMap) == 0 {
-			messageCodeMap[messageGroupEmptyKey] = messageCode{}
-		}
-
-		anyMap, err := messageMapToAnyMap(messageCodeMap)
-		if err != nil {
-			return err
-		}
-
-		_ = c.redisCli.HMSet(ctx, key, anyMap)
-
-		c.mergeMessageCodesMap(messageCodeMap)
-		//}
-	}
-
-	return nil
-}
-
-func (c *Client) getMessageGroupMapFromStrapi(ctx context.Context, messageGroup int) (map[string]messageCode, error) {
-	res := map[string]messageCode{}
-	messageCodes, err := c.getStrapiMessageCodes(ctx, messageGroup)
-	if err != nil {
-		return nil, err
-	}
-	for _, messCode := range messageCodes {
-		res[makeFieldKey(messCode.Locale, messCode.Code)] = messageCode{
+		messageCodeMap[makeFieldKey(messCode.Locale, messCode.Code)] = messageCode{
 			HTTPCode: messCode.HTTPCode,
 			Message:  messCode.Message,
 		}
 	}
 
-	return res, nil
+	c.mergeMessageCodesMap(messageCodeMap)
+	return nil
 }
 
-func messageMapToAnyMap(messageMap map[string]messageCode) (map[string]any, error) {
-	byteMap := make(map[string]any, len(messageMap))
-
-	for key, val := range messageMap {
-		blob, err := json.Marshal(val)
-		if err != nil {
-			return nil, err
-		}
-
-		byteMap[key] = blob
+func loadEmbeddedMessageCodes() ([]fileMessageCode, error) {
+	var codes []fileMessageCode
+	if err := json.Unmarshal(messageCodesJSON, &codes); err != nil {
+		return nil, fmt.Errorf("parse embedded message_codes.json: %w", err)
 	}
-
-	return byteMap, nil
+	return codes, nil
 }
 
-func byteMapToMessageCodeMap(byteMap map[string]string) (map[string]messageCode, error) {
-	messsageCodeMap := make(map[string]messageCode, len(byteMap))
-	for key, val := range byteMap {
-		var messCode messageCode
-		err := json.Unmarshal([]byte(val), &messCode)
-		if err != nil {
-			return nil, err
+func codeBelongsToGroups(code int, groups []int) bool {
+	codeStr := strconv.Itoa(code)
+	for _, group := range groups {
+		if strings.HasPrefix(codeStr, strconv.Itoa(group)) {
+			return true
 		}
-
-		messsageCodeMap[key] = messCode
 	}
-
-	return messsageCodeMap, nil
-}
-
-func makeHashKey(messageGroup int) string {
-	return fmt.Sprintf("messagegroup:%d", messageGroup)
+	return false
 }
 
 func makeFieldKey(locale string, messageCode int) string {
@@ -237,56 +145,6 @@ func fallbackMessageCodeToHTTPCode(code int) int {
 	default:
 		return http.StatusInternalServerError
 	}
-}
-
-func (c *Client) getStrapiMessageCodes(ctx context.Context, messageGroup int) ([]strapiMessageCode, error) {
-	totalPage := 1
-	page := 1
-	uri, err := url.Parse(c.cfg.StrapiMessageCodeURL)
-	if err != nil {
-		return nil, err
-	}
-	var messageCodes []strapiMessageCode
-	for page <= totalPage {
-		queryVals := uri.Query()
-		queryVals.Set("pagination[page]", fmt.Sprintf("%d", page))
-		queryVals.Set("pagination[pageSize]", "300")
-		queryVals.Set("locale", "all")
-		queryVals.Set("filters[code][$startsWithi]", strconv.Itoa(messageGroup))
-		uri.RawQuery = queryVals.Encode()
-
-		req := uthttp.HTTPRequest{
-			Method: http.MethodGet,
-			URL:    uri.String(),
-			Silent: true,
-			Header: map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", c.cfg.StrapiToken),
-			},
-		}
-		cfg := uthttp.Config{
-			Timeout: 3 * time.Second,
-		}
-
-		client := uthttp.NewHTTPClient(cfg)
-
-		resp, err := uthttp.SendHTTPRequest[strapiMessageCodeResp](ctx, client, req, uthttp.DefaultOptions())
-		if err != nil {
-			return nil, err
-		}
-
-		if resp.StatusCode >= 400 {
-			return nil, fmt.Errorf("get message codes from strapi status code: %d", resp.StatusCode)
-		}
-
-		body := resp.Body
-
-		messageCodes = append(messageCodes, body.Data...)
-
-		totalPage = body.Meta.Pagination.PageCount
-		page++
-	}
-
-	return messageCodes, nil
 }
 
 func (c *Client) mergeMessageCodesMap(messageMap map[string]messageCode) {

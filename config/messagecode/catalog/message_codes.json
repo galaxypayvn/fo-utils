@@ -1,0 +1,926 @@
+[
+  {
+    "id": 120,
+    "code": 104001,
+    "message": "Verification failed",
+    "http_code": 401,
+    "locale": "en"
+  },
+  {
+    "id": 2,
+    "code": 102001,
+    "message": "Bạn vừa thực hiện tạo thành công %s",
+    "http_code": 200,
+    "locale": "vi"
+  },
+  {
+    "id": 79,
+    "code": 105100,
+    "message": "Invalid return format",
+    "http_code": 500,
+    "locale": "en"
+  },
+  {
+    "id": 121,
+    "code": 104001,
+    "message": "Request denied",
+    "http_code": 401,
+    "locale": "en"
+  },
+  {
+    "id": 17,
+    "code": 104001,
+    "message": "Yêu cầu bị từ chối",
+    "http_code": 401,
+    "locale": "vi"
+  },
+  {
+    "id": 1,
+    "code": 102000,
+    "message": "Thực thi API thành công",
+    "http_code": 200,
+    "locale": "vi"
+  },
+  {
+    "id": 85,
+    "code": 105000,
+    "message": "System error",
+    "http_code": 500,
+    "locale": "en"
+  },
+  {
+    "id": 122,
+    "code": 104000,
+    "message": "Invalid request",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 109,
+    "code": 104100,
+    "message": "Duplicate information",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 10,
+    "code": 104001,
+    "message": "Xác thực không thành công",
+    "http_code": 401,
+    "locale": "vi"
+  },
+  {
+    "id": 110,
+    "code": 104004,
+    "message": "Information not found",
+    "http_code": 404,
+    "locale": "en"
+  },
+  {
+    "id": 70,
+    "code": 102001,
+    "message": "You have successfully created %s.",
+    "http_code": 200,
+    "locale": "en"
+  },
+  {
+    "id": 16,
+    "code": 104000,
+    "message": "Yêu cầu không hợp lệ",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 20,
+    "code": 105100,
+    "message": "Định dạng trả về không hợp lệ",
+    "http_code": 500,
+    "locale": "vi"
+  },
+  {
+    "id": 15,
+    "code": 105000,
+    "message": "Lỗi hệ thống",
+    "http_code": 500,
+    "locale": "vi"
+  },
+  {
+    "id": 19,
+    "code": 104100,
+    "message": "Thông tin bị trùng lặp",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 18,
+    "code": 104004,
+    "message": "Thông tin không tìm thấy",
+    "http_code": 404,
+    "locale": "vi"
+  },
+  {
+    "id": 81,
+    "code": 224008,
+    "message": "This withdrawal transaction has been canceled",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 181,
+    "code": 224011,
+    "message": "Otp is invalid.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 182,
+    "code": 224011,
+    "message": "Otp xác thực không đúng.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 80,
+    "code": 224006,
+    "message": "Your business has not registered for this service yet. Please contact Support for further assistance",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 82,
+    "code": 224002,
+    "message": "Supplier code not found",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 183,
+    "code": 224011,
+    "message": "Otp is invalid",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 104,
+    "code": 224007,
+    "message": "Your linked account does not support withdrawals",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 25,
+    "code": 224007,
+    "message": "Tài khoản liên kết của bạn chưa hỗ trợ rút tiền",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 105,
+    "code": 224010,
+    "message": "Linked account is incorrect",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 74,
+    "code": 224005,
+    "message": "An error occurred at the issuing bank",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 106,
+    "code": 224009,
+    "message": "Beneficiary account is invalid",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 12,
+    "code": 224002,
+    "message": "Không tìm thấy mã nhà cung cấp",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 184,
+    "code": 224011,
+    "message": "OTP is invalid!",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 185,
+    "code": 224011,
+    "message": "OTP is invalid",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 186,
+    "code": 224011,
+    "message": "OTP xác thực không đúng",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 13,
+    "code": 224001,
+    "message": "The amount is below the minimum or exceeds the maximum threshold",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 100,
+    "code": 224001,
+    "message": "Transaction amount is below the minimum limit",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 22,
+    "code": 224005,
+    "message": "Có lỗi xảy ra ở ngân hàng phát hành",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 24,
+    "code": 224006,
+    "message": "Doanh nghiệp của bạn chưa đăng kí dịch vụ này, vui lòng liên hệ Hỗ trợ để được tư vấn thêm",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 26,
+    "code": 224008,
+    "message": "Giao dịch rút tiền này đã bị huỷ",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 93,
+    "code": 224004,
+    "message": "Payment method not supported",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 23,
+    "code": 224004,
+    "message": "Phương thức thanh toán chưa được hỗ trợ",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 98,
+    "code": 224003,
+    "message": "Insufficient account balance",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 14,
+    "code": 224003,
+    "message": "Số dư tài khoản không đủ",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 28,
+    "code": 224010,
+    "message": "Tài khoản liên kết không chính xác",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 27,
+    "code": 224009,
+    "message": "Tài khoản thụ hưởng không hợp lệ",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 203,
+    "code": 224013,
+    "message": "OTP code has expired",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 204,
+    "code": 224013,
+    "message": "Mã xác thực đã hết hạn",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 207,
+    "code": 224002,
+    "message": "This voucher is not available",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 208,
+    "code": 224002,
+    "message": "Mã khuyến mãi không khả dụng",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 209,
+    "code": 224003,
+    "message": "This voucher is used up",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 210,
+    "code": 224003,
+    "message": "Mã khuyến mãi đã hết lượt sử dụng",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 211,
+    "code": 224001,
+    "message": "Transaction amount is below the minimum limit.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 212,
+    "code": 224001,
+    "message": "Số tiền nhỏ hơn mức tối thiểu.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 213,
+    "code": 224002,
+    "message": "Supplier code not found.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 214,
+    "code": 224002,
+    "message": "Không tìm thấy mã nhà cung cấp.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 215,
+    "code": 224003,
+    "message": "Insufficient account balance.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 216,
+    "code": 224003,
+    "message": "Số dư tài khoản không đủ.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 434,
+    "code": 224059,
+    "message": "Please try again",
+    "http_code": 409,
+    "locale": "en"
+  },
+  {
+    "id": 271,
+    "code": 224014,
+    "message": "Bank account request failed.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 272,
+    "code": 224014,
+    "message": "Yêu cầu liên kết tài khoản ngân hàng thất bại.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 273,
+    "code": 224015,
+    "message": "External service unavailable.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 274,
+    "code": 224015,
+    "message": "Dịch vụ bên ngoài không khả dụng.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 275,
+    "code": 224016,
+    "message": "Bank account already exists.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 276,
+    "code": 224016,
+    "message": "Tài khoản ngân hàng đã tồn tại.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 278,
+    "code": 224017,
+    "message": "Số tiền lớn hơn mức tối đa.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 277,
+    "code": 224017,
+    "message": "Transaction amount is above the maximum limit.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 279,
+    "code": 224018,
+    "message": "Only account owner can perform this action",
+    "http_code": 403,
+    "locale": "en"
+  },
+  {
+    "id": 280,
+    "code": 224018,
+    "message": "Chỉ chủ tài khoản mới có quyền thực hiện thao tác này",
+    "http_code": 403,
+    "locale": "vi"
+  },
+  {
+    "id": 281,
+    "code": 224019,
+    "message": "Account temporarily locked due to too many failed OTP attempts",
+    "http_code": 429,
+    "locale": "en"
+  },
+  {
+    "id": 282,
+    "code": 224019,
+    "message": "Tài khoản tạm thời bị khoá do nhập OTP sai quá nhiều lần",
+    "http_code": 429,
+    "locale": "vi"
+  },
+  {
+    "id": 283,
+    "code": 224020,
+    "message": "OTP resend limit exceeded. Please try again later",
+    "http_code": 429,
+    "locale": "en"
+  },
+  {
+    "id": 284,
+    "code": 224020,
+    "message": "Vượt quá số lần gửi lại OTP. Vui lòng thử lại sau",
+    "http_code": 429,
+    "locale": "vi"
+  },
+  {
+    "id": 285,
+    "code": 224021,
+    "message": "Only virtual accounts support person in charge management",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 286,
+    "code": 224021,
+    "message": "Chỉ tài khoản ảo mới hỗ trợ quản lý người phụ trách",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 287,
+    "code": 224024,
+    "message": "Account permanently locked due to too many failed OTP attempts. Please contact Customer Service for assistance.",
+    "http_code": 403,
+    "locale": "en"
+  },
+  {
+    "id": 288,
+    "code": 224024,
+    "message": "Tài khoản đã bị khóa vĩnh viễn do nhập sai OTP quá nhiều lần. Vui lòng liên hệ bộ phận Chăm sóc khách hàng để được hỗ trợ.",
+    "http_code": 403,
+    "locale": "vi"
+  },
+  {
+    "id": 435,
+    "code": 224059,
+    "message": "Vui lòng thử lại",
+    "http_code": 409,
+    "locale": "vi"
+  },
+  {
+    "id": 433,
+    "code": 224058,
+    "message": "Vui lòng cập nhật tài khoản ngân hàng trước khi gửi yêu cầu",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 387,
+    "code": 224035,
+    "message": "Spending limit not found",
+    "http_code": 404,
+    "locale": "en"
+  },
+  {
+    "id": 388,
+    "code": 224035,
+    "message": "Không tìm thấy hạn mức chi tiêu",
+    "http_code": 404,
+    "locale": "vi"
+  },
+  {
+    "id": 389,
+    "code": 224036,
+    "message": "Staff already has a spending limit for this account",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 390,
+    "code": 224036,
+    "message": "Nhân viên đã có hạn mức chi tiêu cho tài khoản này",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 391,
+    "code": 224037,
+    "message": "Spending limit is locked",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 392,
+    "code": 224037,
+    "message": "Hạn mức chi tiêu đã bị khóa",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 393,
+    "code": 224039,
+    "message": "Spending limit has been cancelled",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 394,
+    "code": 224039,
+    "message": "Hạn mức chi tiêu đã bị hủy",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 395,
+    "code": 224040,
+    "message": "Spending limit has expired",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 396,
+    "code": 224040,
+    "message": "Hạn mức chi tiêu đã hết hạn",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 397,
+    "code": 224041,
+    "message": "Cannot reduce limit below spent amount",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 398,
+    "code": 224041,
+    "message": "Không thể giảm hạn mức thấp hơn số tiền đã chi",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 399,
+    "code": 224042,
+    "message": "Bank does not support spending limit feature",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 400,
+    "code": 224042,
+    "message": "Ngân hàng không hỗ trợ tính năng hạn mức chi tiêu",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 401,
+    "code": 224038,
+    "message": "Spending limit was locked by another user",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 402,
+    "code": 224038,
+    "message": "Tài khoản chi tiêu đã bị khoá bởi người khác",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 403,
+    "code": 224043,
+    "message": "Only owner or assigned staff can lock/unlock",
+    "http_code": 403,
+    "locale": "en"
+  },
+  {
+    "id": 404,
+    "code": 224043,
+    "message": "Chỉ chủ doanh nghiệp hoặc nhân viên được gán mới có thể khoá/mở khoá",
+    "http_code": 403,
+    "locale": "vi"
+  },
+  {
+    "id": 405,
+    "code": 224044,
+    "message": "Spending limit exceeded",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 406,
+    "code": 224044,
+    "message": "Vượt quá hạn mức còn lại",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 407,
+    "code": 224045,
+    "message": "Transaction count limit reached",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 408,
+    "code": 224045,
+    "message": "Tài khoản đã tới giới hạn số lượng giao dịch",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 409,
+    "code": 224046,
+    "message": "Beneficiary account not in whitelist",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 410,
+    "code": 224046,
+    "message": "Tài khoản nhận tiền không nằm trong danh sách được phép",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 411,
+    "code": 224046,
+    "message": "Spending Limit Exceeded",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 412,
+    "code": 224048,
+    "message": "Invalid Recipient Account",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 413,
+    "code": 224048,
+    "message": "Tài khoản nhận tiền không phù hợp",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 414,
+    "code": 224049,
+    "message": "Insufficient Balance",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 415,
+    "code": 224049,
+    "message": "Không đủ số dư",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 416,
+    "code": 224050,
+    "message": "Spending limit request already processed",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 417,
+    "code": 224050,
+    "message": "Yêu cầu định mức đã được xử lý",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 418,
+    "code": 224051,
+    "message": "Spending limit request is not pending",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 419,
+    "code": 224051,
+    "message": "Yêu cầu định mức không ở trạng thái chờ duyệt",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 420,
+    "code": 224052,
+    "message": "You are not the requester",
+    "http_code": 403,
+    "locale": "en"
+  },
+  {
+    "id": 421,
+    "code": 224052,
+    "message": "Bạn không phải người tạo yêu cầu này",
+    "http_code": 403,
+    "locale": "vi"
+  },
+  {
+    "id": 422,
+    "code": 224053,
+    "message": "A pending adjustment request already exists",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 423,
+    "code": 224053,
+    "message": "Đã có yêu cầu điều chỉnh đang chờ duyệt",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 424,
+    "code": 224054,
+    "message": "Spending limit is not active",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 425,
+    "code": 224054,
+    "message": "Định mức chi tiêu không còn hiệu lực để điều chỉnh",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 426,
+    "code": 224055,
+    "message": "Reimbursement not found",
+    "http_code": 404,
+    "locale": "en"
+  },
+  {
+    "id": 427,
+    "code": 224055,
+    "message": "Không tìm thấy yêu cầu thanh toán",
+    "http_code": 404,
+    "locale": "vi"
+  },
+  {
+    "id": 428,
+    "code": 224056,
+    "message": "Invalid reimbursement status for this action",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 429,
+    "code": 224056,
+    "message": "Trạng thái yêu cầu thanh toán không hợp lệ",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 430,
+    "code": 224057,
+    "message": "Only the creator can perform this action",
+    "http_code": 403,
+    "locale": "en"
+  },
+  {
+    "id": 431,
+    "code": 224057,
+    "message": "Bạn không có quyền thực hiện thao tác này",
+    "http_code": 403,
+    "locale": "vi"
+  },
+  {
+    "id": 432,
+    "code": 224058,
+    "message": "Please add a bank account before submitting",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 436,
+    "code": 224060,
+    "message": "Business owner not found",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 437,
+    "code": 224060,
+    "message": "Không tìm thấy chủ doanh nghiệp",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 438,
+    "code": 224062,
+    "message": "Staff bank account not found",
+    "http_code": 404,
+    "locale": "en"
+  },
+  {
+    "id": 439,
+    "code": 224062,
+    "message": "Không tìm thấy tài khoản ngân hàng nhân viên",
+    "http_code": 404,
+    "locale": "vi"
+  },
+  {
+    "id": 450,
+    "code": 224090,
+    "message": "Invalid configuration for one-time use spending limit.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 451,
+    "code": 224090,
+    "message": "Cấu hình định mức Dùng 1 lần không hợp lệ.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 452,
+    "code": 224091,
+    "message": "Spending limit has already been used and is no longer active.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 453,
+    "code": 224091,
+    "message": "Định mức đã được sử dụng và không còn hiệu lực.",
+    "http_code": 400,
+    "locale": "vi"
+  },
+  {
+    "id": 454,
+    "code": 224092,
+    "message": "Cannot edit configuration of a one-time use spending limit.",
+    "http_code": 400,
+    "locale": "en"
+  },
+  {
+    "id": 455,
+    "code": 224092,
+    "message": "Không thể chỉnh sửa cấu hình của định mức Dùng 1 lần.",
+    "http_code": 400,
+    "locale": "vi"
+  }
+]
