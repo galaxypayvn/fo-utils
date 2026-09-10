@@ -128,8 +128,8 @@ func SendHTTPRequest[T any](ctx context.Context, client *http.Client, httpReq HT
 		}
 	}
 
-	// Create HTTP request
-	req, err := http.NewRequest(httpReq.Method, httpReq.URL, reqReader)
+	// Attach ctx so outbound instrumentation (e.g. otelhttp) can propagate W3C traceparent.
+	req, err := http.NewRequestWithContext(ctx, httpReq.Method, httpReq.URL, reqReader)
 	if err != nil {
 		log.WithError(err).Error("error creating HTTP request")
 		return res, err
